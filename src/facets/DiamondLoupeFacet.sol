@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {LibDiamond} from "../libraries/LibDiamond.sol";
 import {IDiamondLoupe} from "../interfaces/IDiamondLoupe.sol";
 import {IERC165} from "../interfaces/IERC165.sol";
+import {LibDiamond} from "../libraries/LibDiamond.sol";
 
 contract DiamondLoupeFacet is IDiamondLoupe, IERC165 {
 
@@ -22,19 +22,19 @@ contract DiamondLoupeFacet is IDiamondLoupe, IERC165 {
     }
 
     function facetFunctionSelectors(address _facet)
-        external view override returns (bytes4[] memory)
+    external view override returns (bytes4[] memory)
     {
         return LibDiamond.diamondStorage().facetFunctionSelectors[_facet];
     }
 
     function facetAddresses()
-        external view override returns (address[] memory)
+    external view override returns (address[] memory)
     {
         return LibDiamond.diamondStorage().facetAddresses;
     }
 
     function facetAddress(bytes4 _functionSelector)
-        external view override returns (address)
+    external view override returns (address)
     {
         return LibDiamond
             .diamondStorage()
@@ -43,7 +43,7 @@ contract DiamondLoupeFacet is IDiamondLoupe, IERC165 {
     }
 
     function supportsInterface(bytes4 _interfaceId)
-        external view override returns (bool)
+    external view override returns (bool)
     {
         return LibDiamond.diamondStorage().supportedInterfaces[_interfaceId];
     }

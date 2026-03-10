@@ -21,6 +21,6 @@ interface IMostroStructs {
         address buyTokenAddress;
         address jobUpdaterAddress;
         uint256 incentivesPercentage;
-        bool    cDKTokenPaused;
+        bool cDKTokenPaused;
     }
 }

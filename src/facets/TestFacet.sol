@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import {IMostroStructs} from "../interfaces/IMostroStructs.sol";
-import {ITestFacet}     from "../interfaces/ITestFacet.sol";
+import {ITestFacet} from "../interfaces/ITestFacet.sol";
 import {TestStorage} from "../libraries/StorageLibraries.sol";
 
 /**

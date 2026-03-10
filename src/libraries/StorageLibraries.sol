@@ -22,7 +22,7 @@ library TestStorage {
     returns (IMostroStructs.TestData storage l)
     {
         bytes32 slot = STORAGE_SLOT;
-        assembly { l.slot := slot }
+        assembly {l.slot := slot}
     }
 }
 
@@ -36,7 +36,7 @@ library DiamondLayoutStorage {
     returns (IMostroStructs.DiamondLayout storage l)
     {
         bytes32 slot = STORAGE_SLOT;
-        assembly { l.slot := slot }
+        assembly {l.slot := slot}
     }
 }
 
@@ -50,6 +50,6 @@ library ConfigStorage {
     returns (IMostroStructs.ConfigLayout storage l)
     {
         bytes32 slot = STORAGE_SLOT;
-        assembly { l.slot := slot }
+        assembly {l.slot := slot}
     }
 }

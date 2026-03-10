@@ -5,7 +5,7 @@ interface IDiamondCut {
     // Add    = wire new selectors to a facet
     // Replace = point existing selectors to a new facet
     // Remove  = delete selectors entirely
-    enum FacetCutAction { Add, Replace, Remove }
+    enum FacetCutAction {Add, Replace, Remove}
 
     struct FacetCut {
         address facetAddress;

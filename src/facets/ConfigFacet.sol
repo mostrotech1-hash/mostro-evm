@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {IMostroStructs}           from "../interfaces/IMostroStructs.sol";
-import {IConfigFacet}  from "../interfaces/IConfigFacet.sol";
+import {IConfigFacet} from "../interfaces/IConfigFacet.sol";
+import {IMostroStructs} from "../interfaces/IMostroStructs.sol";
 import {ConfigStorage} from "../libraries/StorageLibraries.sol";
 
 /// @title ConfigFacet

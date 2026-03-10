@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {LibDiamond}          from "../libraries/LibDiamond.sol";
-import {IMostroStructs}      from "../interfaces/IMostroStructs.sol";
+import {IMostroStructs} from "../interfaces/IMostroStructs.sol";
+import {LibDiamond} from "../libraries/LibDiamond.sol";
 import {DiamondLayoutStorage} from "../libraries/StorageLibraries.sol";
 
 /**

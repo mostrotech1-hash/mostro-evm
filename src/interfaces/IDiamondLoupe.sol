@@ -12,13 +12,13 @@ interface IDiamondLoupe {
 
     /// @notice Returns all selectors for a given facet address
     function facetFunctionSelectors(address _facet)
-        external view returns (bytes4[] memory);
+    external view returns (bytes4[] memory);
 
     /// @notice Returns all facet addresses
     function facetAddresses()
-        external view returns (address[] memory);
+    external view returns (address[] memory);
 
     /// @notice Returns the facet address for a given selector
     function facetAddress(bytes4 _functionSelector)
-        external view returns (address);
+    external view returns (address);
 }

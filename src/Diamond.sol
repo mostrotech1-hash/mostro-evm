@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {LibDiamond} from "./libraries/LibDiamond.sol";
 import {IDiamondCut} from "./interfaces/IDiamondCut.sol";
 import {IDiamondLoupe} from "./interfaces/IDiamondLoupe.sol";
 import {IERC165} from "./interfaces/IERC165.sol";
+import {LibDiamond} from "./libraries/LibDiamond.sol";
 
 contract Diamond {
 
@@ -18,8 +18,8 @@ contract Diamond {
 
         // Register ERC165 interfaces
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
-        ds.supportedInterfaces[type(IERC165).interfaceId]      = true;
-        ds.supportedInterfaces[type(IDiamondCut).interfaceId]  = true;
+        ds.supportedInterfaces[type(IERC165).interfaceId] = true;
+        ds.supportedInterfaces[type(IDiamondCut).interfaceId] = true;
         ds.supportedInterfaces[type(IDiamondLoupe).interfaceId] = true;
     }
 
@@ -35,8 +35,8 @@ contract Diamond {
             returndatacopy(0, 0, returndatasize())
 
             switch result
-            case 0  { revert(0, returndatasize()) }
-            default { return(0, returndatasize()) }
+            case 0  {revert(0, returndatasize())}
+            default {return (0, returndatasize())}
         }
     }
 

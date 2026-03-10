@@ -10,7 +10,7 @@ library LibDiamond {
     // -------------------------------------------------------------------------
 
     bytes32 constant DIAMOND_STORAGE_POSITION =
-        keccak256("diamond.standard.diamond.storage");
+    keccak256("diamond.standard.diamond.storage");
 
     struct FacetAddressAndPosition {
         address facetAddress;
@@ -31,9 +31,9 @@ library LibDiamond {
     }
 
     function diamondStorage()
-        internal
-        pure
-        returns (DiamondStorage storage ds)
+    internal
+    pure
+    returns (DiamondStorage storage ds)
     {
         bytes32 position = DIAMOND_STORAGE_POSITION;
         assembly {
@@ -179,7 +179,7 @@ library LibDiamond {
         for (uint256 i; i < _functionSelectors.length; i++) {
             bytes4 selector = _functionSelectors[i];
             address existingFacet =
-                ds.selectorToFacetAndPosition[selector].facetAddress;
+                                    ds.selectorToFacetAndPosition[selector].facetAddress;
 
             require(existingFacet != address(0), "LibDiamond: Selector does not exist");
             require(
@@ -207,7 +207,7 @@ library LibDiamond {
         bytes4 _selector
     ) private {
         uint96 position =
-            ds.selectorToFacetAndPosition[_selector].functionSelectorPosition;
+                                ds.selectorToFacetAndPosition[_selector].functionSelectorPosition;
         bytes4[] storage selectors = ds.facetFunctionSelectors[_facetAddress];
         uint256 last = selectors.length - 1;
 
@@ -215,7 +215,7 @@ library LibDiamond {
             bytes4 lastSelector = selectors[last];
             selectors[position] = lastSelector;
             ds.selectorToFacetAndPosition[lastSelector]
-                .functionSelectorPosition = position;
+            .functionSelectorPosition = position;
         }
 
         selectors.pop();
