@@ -17,10 +17,6 @@ interface IMostroStructs {
 
     struct ConfigLayout {
         address multisigContract;
-        address cdkTreasury;
-        address buyTokenAddress;
-        address jobUpdaterAddress;
-        uint256 incentivesPercentage;
-        bool cDKTokenPaused;
     }
+
 }
