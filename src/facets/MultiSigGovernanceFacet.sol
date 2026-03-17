@@ -75,7 +75,7 @@ contract MultisigGovernance is IMostroStructs, IMultisigGovernanceFacet {
      * @param target Target address for the call
      * @param data Call data
      */
-    function submitProposal(address target, bytes memory data) external onlySigner {
+    function submitProposal(address target, bytes memory data) external {
         require(target != address(0), "Invalid target address");
         
         uint256 proposalId = proposalCount;
@@ -121,7 +121,6 @@ contract MultisigGovernance is IMostroStructs, IMultisigGovernanceFacet {
      */
     function executeProposal(uint256 proposalId) 
         external 
-        onlySigner 
         proposalExists(proposalId) 
         notExecuted(proposalId) 
     {
