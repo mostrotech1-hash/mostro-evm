@@ -25,12 +25,6 @@ contract MultisigGovernance is IMostroStructs, IMultisigGovernanceFacet {
     
     // ==================== Modifiers ====================
     
-    /// @dev Verifies that the caller is an authorized signer
-    modifier onlySigner() {
-        require(signers[msg.sender], "Only an authorized signer can call this function");
-        _;
-    }
-    
     /// @dev Verifies that the proposal exists
     modifier proposalExists(uint256 proposalId) {
         require(proposalId < proposalCount, "Proposal does not exist");
@@ -99,10 +93,11 @@ contract MultisigGovernance is IMostroStructs, IMultisigGovernanceFacet {
      */
     function approveProposal(uint256 proposalId) 
         external 
-        onlySigner 
+        onlySuperAdmin
         proposalExists(proposalId) 
         notExecuted(proposalId) 
     {
+        if(!admins[msg.sender]) revert NotAnAdmin();
         Proposal storage proposal = proposals[proposalId];
         
         // Check that the signer has not already approved
