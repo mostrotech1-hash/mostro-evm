@@ -152,8 +152,8 @@ contract MultisigGovernance is IMostroStructs, IMultisigGovernanceFacet {
             uint256 id,
             address target,
             bytes memory data,
-            uint256 requiredApprovalsCount,
-            uint256 approvalCount,
+            uint256 approvalThreshold,
+            uint256 approvalWeight,
             bool executed
         ) 
     {
@@ -162,17 +162,10 @@ contract MultisigGovernance is IMostroStructs, IMultisigGovernanceFacet {
             proposal.id,
             proposal.target,
             proposal.data,
-            proposal.requiredApprovals,
-            proposal.approvalCount,
+            proposal.approvalThreshold,
+            proposal.approvalWeight,
             proposal.executed
         );
-    }
-    
-    /**
-     * @dev Returns the list of signers
-     */
-    function getSigners() external view returns (address[] memory) {
-        return signersList;
     }
     
     /**
