@@ -123,8 +123,8 @@ contract MultisigGovernance is IMostroStructs, IMultisigGovernanceFacet {
         
         // Check that the approval threshold is reached
         require(
-            proposal.approvalCount >= proposal.requiredApprovals,
-            "Insufficient approvals to execute this proposal"
+            proposal.approvalWeight >= proposal.approvalThreshold,
+            "Insufficient approval weight to execute this proposal"
         );
         
         // Mark as executed before the call (reentrancy protection)
