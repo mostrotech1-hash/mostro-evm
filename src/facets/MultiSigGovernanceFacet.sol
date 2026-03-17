@@ -42,12 +42,9 @@ contract MultisigGovernance is IMostroStructs, IMultisigGovernanceFacet {
     /**
      * @dev Initializes the contract with signers and approval threshold
      * @param initialSigners Array of initial signer addresses
-     * @param _quorum Number of approvals required to execute a proposal
      */
-    constructor(address[] memory initialSigners, uint256 _quorum) {
+    constructor(address[] memory initialSigners) {
         require(initialSigners.length > 0, "At least one signer is required");
-        require(_quorum > 0 && _quorum <= initialSigners.length, 
-                "Approval threshold must be between 1 and number of signers");
         
         // Add initial signers
         for (uint256 i = 0; i < initialSigners.length; i++) {
@@ -58,8 +55,6 @@ contract MultisigGovernance is IMostroStructs, IMultisigGovernanceFacet {
             signers[signer] = true;
             signersList.push(signer);
         }
-        
-        quorum = _quorum;
     }
     
     // ==================== Main Functions ====================
@@ -68,8 +63,9 @@ contract MultisigGovernance is IMostroStructs, IMultisigGovernanceFacet {
      * @dev Submits a new proposal
      * @param target Target address for the call
      * @param data Call data
+     * @param approvalThreshold Approval weight required to execute the proposal
      */
-    function submitProposal(address target, bytes memory data) external {
+    function submitProposal(address target, bytes memory data, uint256 approvalThreshold) external {
         require(target != address(0), "Invalid target address");
         
         uint256 proposalId = proposalCount;
@@ -78,8 +74,8 @@ contract MultisigGovernance is IMostroStructs, IMultisigGovernanceFacet {
         newProposal.id = proposalId;
         newProposal.target = target;
         newProposal.data = data;
-        newProposal.requiredApprovals = quorum;
-        newProposal.approvalCount = 0;
+        newProposal.approvalThreshold = approvalThreshold;
+        newProposal.approvalWeight = 0;
         newProposal.executed = false;
         
         proposalCount++;

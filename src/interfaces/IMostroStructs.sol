@@ -26,7 +26,6 @@ interface IMostroStructs {
     // Storage struct for MultisigGovernance domain
     struct MultisigGovernance {
         uint256 proposalCount;
-        uint256 quorum;
         mapping(uint256 => Proposal) proposals;
         mapping(address => bool) signers;
         address[] signersList;
