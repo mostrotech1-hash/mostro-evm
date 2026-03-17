@@ -18,7 +18,7 @@ contract MultisigGovernance is IMostroStructs, IMultisigGovernanceFacet {
     event ProposalSubmitted(uint256 indexed proposalId, address indexed target, bytes data);
     
     /// @dev Emitted when a signer approves a proposal
-    event ProposalApproved(uint256 indexed proposalId, address indexed signer, uint256 approvalsCount);
+    event ProposalApproved(uint256 indexed proposalId, address indexed signer, uint256 approvalWeight);
     
     /// @dev Emitted when a proposal is executed
     event ProposalExecuted(uint256 indexed proposalId, bool success, bytes result);
@@ -101,9 +101,14 @@ contract MultisigGovernance is IMostroStructs, IMultisigGovernanceFacet {
         
         // Record the approval
         proposal.approvers[msg.sender] = true;
-        proposal.approvalCount++;
+
+        if(superAdmins[msg.sender]) {
+            proposal.approvalWeight += 2; // Super admin approvals count as 2
+        } else {
+            proposal.approvalWeight += 1; // Regular admin approvals count as 1
+        }
         
-        emit ProposalApproved(proposalId, msg.sender, proposal.approvalCount);
+        emit ProposalApproved(proposalId, msg.sender, proposal.approvalWeight);
     }
     
     /**
