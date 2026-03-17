@@ -16,6 +16,8 @@ import {IConfigFacet} from "../src/interfaces/IConfigFacet.sol";
 import {IDiamondCut} from "../src/interfaces/IDiamondCut.sol";
 import {IDiamondLoupe} from "../src/interfaces/IDiamondLoupe.sol";
 import {DiamondInit} from "../src/upgradeInitializers/DiamondInit.sol";
+import {IMostroRoleManager} from "../src/Interfaces/IMostroRoleManager.sol";
+import {MostroRoleManagerFacet} from "../src/facets/MostroRoleManagerFacet.sol";
 
 /**
  * @title DeployDiamond
@@ -57,10 +59,12 @@ contract DeployDiamond is Script {
         DiamondLoupeFacet loupeFacet = new DiamondLoupeFacet();
         ConfigFacet configFacet = new ConfigFacet();
         TestFacet testFacet = new TestFacet();
+        MostroRoleManagerFacet mostroRoleManagerFacet = new MostroRoleManagerFacet();
 
         console.log("DiamondLoupeFacet:", address(loupeFacet));
         console.log("ConfigFacet:        ", address(configFacet));
         console.log("TestFacet:        ", address(testFacet));
+        console.log("MostroRoleManagerFacet:", address(mostroRoleManagerFacet));
 
         // ==============================================================
         // PHASE 3: Deploy DiamondInit
@@ -77,7 +81,7 @@ contract DeployDiamond is Script {
 
         console.log("\n=== Phase 4: Building FacetCuts ===");
 
-        IDiamondCut.FacetCut[] memory cuts = new IDiamondCut.FacetCut[](3); // ✅ 3 facets
+        IDiamondCut.FacetCut[] memory cuts = new IDiamondCut.FacetCut[](4); // ✅ 4 facets
 
         // --- DiamondLoupe ---
         bytes4[] memory loupeSelectors = new bytes4[](5);
@@ -115,7 +119,24 @@ contract DeployDiamond is Script {
             functionSelectors: configSelectors
         });
 
-        console.log("FacetCuts prepared: 3 facets");
+        // --- MostroRoleManager ---
+        bytes4[] memory mostroRoleManagerSelectors = new bytes4[](8);
+        mostroRoleManagerSelectors[0] = IMostroRoleManager.addAdmin.selector;
+        mostroRoleManagerSelectors[1] = IMostroRoleManager.removeAdmin.selector;
+        mostroRoleManagerSelectors[2] = IMostroRoleManager.addSuperAdmin.selector;
+        mostroRoleManagerSelectors[3] = IMostroRoleManager.removeSuperAdmin.selector;
+        mostroRoleManagerSelectors[4] = IMostroRoleManager.selfRevoke.selector;
+        mostroRoleManagerSelectors[5] = IMostroRoleManager.isAdmin.selector;
+        mostroRoleManagerSelectors[6] = IMostroRoleManager.isSuperAdmin.selector;
+        mostroRoleManagerSelectors[7] = IMostroRoleManager.getTotalVoteWeight.selector;
+
+        cuts[3] = IDiamondCut.FacetCut({
+            facetAddress: address(mostroRoleManagerFacet),
+            action: IDiamondCut.FacetCutAction.Add,
+            functionSelectors: mostroRoleManagerSelectors
+        });
+
+        console.log("FacetCuts prepared: 4 facets");
 
         // ==============================================================
         // PHASE 5: Execute Atomic DiamondCut with Initialization
@@ -132,6 +153,8 @@ contract DeployDiamond is Script {
             address(diamondInit),
             abi.encodeCall(DiamondInit.init, (params))
         );
+
+        MostroRoleManagerFacet(address(diamond)).initializeMostroRoleManager();
 
         console.log("DiamondCut executed successfully");
 
@@ -158,6 +181,7 @@ contract DeployDiamond is Script {
         console.log("DiamondLoupeFacet: ", address(loupeFacet));
         console.log("ConfigFacet: ",       address(configFacet));
         console.log("TestFacet:         ", address(testFacet));
+        console.log("MostroRoleManagerFacet: ", address(mostroRoleManagerFacet));
         console.log("DiamondInit:       ", address(diamondInit));
         console.log("\nDiamond is ready for use");
     }
