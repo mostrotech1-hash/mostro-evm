@@ -9,12 +9,12 @@ interface IMultisigGovernanceFacet {
         uint256 id;                    // Unique proposal identifier
         address target;                // Target address for the call
         bytes data;                    // Call data (function signature + parameters)
-        uint256 requiredApprovals;     // Number of required approvals
-        uint256 approvalCount;         // Current approval count
+        uint256 approvalThreshold;     // Weight threshold for execution
+        uint256 approvalWeight;         // Current approval weight
         bool executed;                 // Execution status
         mapping(address => bool) approvers; // Tracking of signers who approved
     }
-    
+
     function submitProposal(address target, bytes calldata data) 
     external returns (uint256);
 
