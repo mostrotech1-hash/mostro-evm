@@ -53,3 +53,17 @@ library ConfigStorage {
         assembly {l.slot := slot}
     }
 }
+
+library VaultDeployerStorage {
+    bytes32 internal constant STORAGE_SLOT =
+    keccak256("mostro.storage.vault.deployer");
+
+    function layout()
+    internal
+    view
+    returns (IMostroStructs.VaultDeployerLayout storage l)
+    {
+        bytes32 slot = STORAGE_SLOT;
+        assembly {l.slot := slot}
+    }
+}

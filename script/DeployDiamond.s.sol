@@ -15,6 +15,8 @@ import {TestFacet} from "../src/facets/TestFacet.sol";
 import {IConfigFacet} from "../src/interfaces/IConfigFacet.sol";
 import {IDiamondCut} from "../src/interfaces/IDiamondCut.sol";
 import {IDiamondLoupe} from "../src/interfaces/IDiamondLoupe.sol";
+import {IVaultDeployerFacet} from "../src/interfaces/IVaultDeployerFacet.sol";
+import {VaultDeployerFacet} from "../src/facets/VaultDeployerFacet.sol";
 import {DiamondInit} from "../src/upgradeInitializers/DiamondInit.sol";
 
 /**
@@ -57,10 +59,12 @@ contract DeployDiamond is Script {
         DiamondLoupeFacet loupeFacet = new DiamondLoupeFacet();
         ConfigFacet configFacet = new ConfigFacet();
         TestFacet testFacet = new TestFacet();
+        VaultDeployerFacet vaultDeployerFacet = new VaultDeployerFacet();
 
         console.log("DiamondLoupeFacet:", address(loupeFacet));
         console.log("ConfigFacet:        ", address(configFacet));
         console.log("TestFacet:        ", address(testFacet));
+        console.log("VaultDeployerFacet: ", address(vaultDeployerFacet));
 
         // ==============================================================
         // PHASE 3: Deploy DiamondInit
@@ -77,7 +81,7 @@ contract DeployDiamond is Script {
 
         console.log("\n=== Phase 4: Building FacetCuts ===");
 
-        IDiamondCut.FacetCut[] memory cuts = new IDiamondCut.FacetCut[](3); // ✅ 3 facets
+        IDiamondCut.FacetCut[] memory cuts = new IDiamondCut.FacetCut[](4); // ✅ 4 facets
 
         // --- DiamondLoupe ---
         bytes4[] memory loupeSelectors = new bytes4[](5);
@@ -115,7 +119,19 @@ contract DeployDiamond is Script {
             functionSelectors: configSelectors
         });
 
-        console.log("FacetCuts prepared: 3 facets");
+        // --- VaultDeployerFacet ---
+        bytes4[] memory vaultSelectors = new bytes4[](2);
+        vaultSelectors[0] = IVaultDeployerFacet.deployAllVaults.selector;
+        vaultSelectors[1] =
+            IVaultDeployerFacet.getDeploymentByPlatformContract.selector;
+
+        cuts[3] = IDiamondCut.FacetCut({
+            facetAddress: address(vaultDeployerFacet),
+            action: IDiamondCut.FacetCutAction.Add,
+            functionSelectors: vaultSelectors
+        });
+
+        console.log("FacetCuts prepared: 4 facets");
 
         // ==============================================================
         // PHASE 5: Execute Atomic DiamondCut with Initialization
@@ -147,18 +163,7 @@ contract DeployDiamond is Script {
 
         vm.stopBroadcast();
 
-        // ==============================================================
-        // DEPLOYMENT SUMMARY
-        // ==============================================================
-
         console.log("\n=== DEPLOYMENT COMPLETE ===");
-        console.log("Deployer:          ", deployer);
-        console.log("Diamond:           ", address(diamond));
-        console.log("DiamondCutFacet:   ", address(cutFacet));
-        console.log("DiamondLoupeFacet: ", address(loupeFacet));
-        console.log("ConfigFacet: ",       address(configFacet));
-        console.log("TestFacet:         ", address(testFacet));
-        console.log("DiamondInit:       ", address(diamondInit));
-        console.log("\nDiamond is ready for use");
+        console.log("Diamond: ", address(diamond));
     }
 }

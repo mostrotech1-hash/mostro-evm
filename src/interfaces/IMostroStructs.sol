@@ -19,4 +19,21 @@ interface IMostroStructs {
         address multisigContract;
     }
 
+    // Storage struct for vault deployment records
+    struct DeployedVaults {
+        address artistUnvestedVault;
+        address lpVault;
+        address mostroGenesisWallet;
+        address platformUsdcTreasury;
+        address publicPoolVault;
+        address streamFlowEscrowVault;
+        address unlockedSaleVault;
+    }
+
+    // Storage struct for vault deployer domain
+    struct VaultDeployerLayout {
+        mapping(address platformContract => DeployedVaults deployedVaults)
+            deploymentsByPlatformContract;
+    }
+
 }
