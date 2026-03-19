@@ -6,15 +6,7 @@ import {IMostroStructs} from '../Interfaces/IMostroStructs.sol';
 import {MostroRoleManagerStorage} from '../libraries/StorageLibraries.sol';
 
 contract MostroRoleManagerFacet is IMostroStructs, IMostroRoleManager {
-
-    // ─── State Variables ───────────────────────────────────
-
-    // mapping(address => bool) private MostroRoleManagerStorage.layout().admins;
-    // mapping(address => bool) private superAdmins;
-
-    // uint256 public adminCount;
-    // uint256 public superAdminCount;
-
+    
     // ─── Modifiers ────────────────────────────────────────
 
     modifier onlySuperAdmin() {
@@ -22,11 +14,11 @@ contract MostroRoleManagerFacet is IMostroStructs, IMostroRoleManager {
         _;
     }
 
-    // constructor() {
-    //     MostroRoleManagerStorage.layout().superAdmins[msg.sender] = true;
-    //     MostroRoleManagerStorage.layout().superAdminCount++;
-    //     emit SuperAdminAdded(msg.sender);
-    // }
+    constructor() {
+        MostroRoleManagerStorage.layout().superAdmins[msg.sender] = true;
+        MostroRoleManagerStorage.layout().superAdminCount++;
+        emit SuperAdminAdded(msg.sender);
+    }
 
     function initializeMostroRoleManager() external {
         if(MostroRoleManagerStorage.layout().superAdminCount != 0) revert AlreadyInitialized();

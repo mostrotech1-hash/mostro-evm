@@ -154,8 +154,6 @@ contract DeployDiamond is Script {
             abi.encodeCall(DiamondInit.init, (params))
         );
 
-        MostroRoleManagerFacet(address(diamond)).initializeMostroRoleManager();
-
         console.log("DiamondCut executed successfully");
 
         // ==============================================================
