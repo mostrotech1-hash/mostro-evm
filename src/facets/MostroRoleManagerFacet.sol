@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {IMostroRoleManager} from '../Interfaces/IMostroRoleManager.sol';
-import {IMostroStructs} from '../Interfaces/IMostroStructs.sol';
+import {IMostroRoleManager} from '../interfaces/IMostroRoleManager.sol';
+import {IMostroStructs} from '../interfaces/IMostroStructs.sol';
 import {MostroRoleManagerStorage} from '../libraries/StorageLibraries.sol';
 
 contract MostroRoleManagerFacet is IMostroStructs, IMostroRoleManager {
@@ -19,13 +19,6 @@ contract MostroRoleManagerFacet is IMostroStructs, IMostroRoleManager {
         MostroRoleManagerStorage.layout().superAdminCount++;
         emit SuperAdminAdded(msg.sender);
     }
-
-    function initializeMostroRoleManager() external {
-        if(MostroRoleManagerStorage.layout().superAdminCount != 0) revert AlreadyInitialized();
-        MostroRoleManagerStorage.layout().superAdmins[msg.sender] = true;
-        MostroRoleManagerStorage.layout().superAdminCount++;
-        emit SuperAdminAdded(msg.sender);
-}
 
     // ─── Role Lifecycle ───────────────────────────────────
 
