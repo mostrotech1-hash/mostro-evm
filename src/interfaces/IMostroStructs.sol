@@ -19,4 +19,12 @@ interface IMostroStructs {
         address multisigContract;
     }
 
+    // Storage struct for Mostro Role Manager
+    struct MostroRoleManagerLayout {
+        mapping(address => bool) admins;
+        mapping(address => bool) superAdmins;
+        uint256 adminCount;
+        uint256 superAdminCount;
+    }
+
 }
