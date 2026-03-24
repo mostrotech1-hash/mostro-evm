@@ -1,19 +1,39 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {IMultisigGovernanceFacet} from "../interfaces/IMultisigGovernanceFacet.sol";
-import {IMostroStructs} from "../interfaces/IMostroStructs.sol";
-import {MultisigGovernanceStorage} from "../libraries/StorageLibraries.sol";
-
 /**
  * @title MultisigGovernance
- * @dev Simple multi-signature governance contract allowing multiple signers
- * to collectively approve and execute proposals.
+ * @dev Multi-signature governance contract for Mostro
  */
-contract MultisigGovernance is IMostroStructs, IMultisigGovernanceFacet {
+ 
+contract MultisigGovernance {
+
+    // ==================== Structs =====================
+
+    /// @dev Structure representing a proposal
+    struct Proposal {
+        uint256 id;                    // Unique proposal identifier
+        address target;                // Target address for the call
+        bytes data;                    // Call data (function signature + parameters)
+        uint256 approvalThreshold;     // Weight threshold for execution
+        uint256 approvalWeight;         // Current approval weight
+        bool executed;                 // Execution status
+        mapping(address => bool) approvers; // Tracking of signers who approved
+    }
+
+    // ==================== Variables =====================
+
+    uint256 proposalCount;
+    address public immutable DiamondContract;
+    mapping(uint256 => Proposal) proposals;
+    mapping(address => bool) signers;
+    address[] signersList;
     
     // ==================== Events ====================
     
+    /// @dev Emitted when linked contract address is updated
+    event DiamondUpdated(address indexed diamondContract);
+
     /// @dev Emitted when a new proposal is created
     event ProposalSubmitted(uint256 indexed proposalId, address indexed target, bytes data);
     
@@ -40,21 +60,13 @@ contract MultisigGovernance is IMostroStructs, IMultisigGovernanceFacet {
     // ==================== Constructor ====================
     
     /**
-     * @dev Initializes the contract with signers and approval threshold
-     * @param initialSigners Array of initial signer addresses
+     * @dev Initializes the contract Deployed RoleManager contract address linked at deployment time
      */
-    constructor(address[] memory initialSigners) {
-        require(initialSigners.length > 0, "At least one signer is required");
+    constructor(address _diamondContract) {
         
-        // Add initial signers
-        for (uint256 i = 0; i < initialSigners.length; i++) {
-            address signer = initialSigners[i];
-            require(signer != address(0), "Invalid signer address");
-            require(!signers[signer], "Duplicate signer");
-            
-            signers[signer] = true;
-            signersList.push(signer);
-        }
+        DiamondContract = _diamondContract;
+        emit DiamondUpdated(DiamondContract);
+
     }
     
     // ==================== Main Functions ====================
@@ -89,11 +101,16 @@ contract MultisigGovernance is IMostroStructs, IMultisigGovernanceFacet {
      */
     function approveProposal(uint256 proposalId) 
         external 
-        onlySuperAdmin
         proposalExists(proposalId) 
         notExecuted(proposalId) 
     {
-        if(!admins[msg.sender]) revert NotAnAdmin();
+        //require(RoleManagerContract.isSuperAdmin(msg.sender) != true, "Not a super admin");
+        //require(RoleManagerContract.isAdmin(msg.sender) != true, "Not an admin");
+        require(MostroRoleManagerFacet(DiamondContract).isSuperAdmin(msg.sender) == true ||
+                MostroRoleManagerFacet(DiamondContract).isAdmin(msg.sender) == true,
+            "The msg sender must have the admin or the super admin role"
+        );
+
         Proposal storage proposal = proposals[proposalId];
         
         // Check that the signer has not already approved
@@ -102,7 +119,7 @@ contract MultisigGovernance is IMostroStructs, IMultisigGovernanceFacet {
         // Record the approval
         proposal.approvers[msg.sender] = true;
 
-        if(superAdmins[msg.sender]) {
+        if(MostroRoleManagerFacet(DiamondContract).isSuperAdmin(msg.sender)) {
             proposal.approvalWeight += 2; // Super admin approvals count as 2
         } else {
             proposal.approvalWeight += 1; // Regular admin approvals count as 1

@@ -54,16 +54,3 @@ library ConfigStorage {
     }
 }
 
-library MultisigGovernanceStorage {
-    bytes32 internal constant STORAGE_SLOT =
-    keccak256("mostro.storage.multisig.governance");
-
-    function layout()
-    internal
-    view
-    returns (IMostroStructs.MultisigGovernanceLayout storage l)
-    {
-        bytes32 slot = STORAGE_SLOT;
-        assembly {l.slot := slot}
-    }
-}
