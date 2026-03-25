@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import {MostroRoleManagerFacet} from "./facets/MostroRoleManagerFacet.sol";
+
 /**
  * @title MultisigGovernance
  * @dev Multi-signature governance contract for Mostro
