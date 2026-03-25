@@ -14,12 +14,17 @@ interface IMostroStructs {
     }
 
     // Storage struct for Config domain
+
     struct ConfigLayout {
         address multisigContract;
-        address cdkTreasury;
-        address buyTokenAddress;
-        address jobUpdaterAddress;
-        uint256 incentivesPercentage;
-        bool cDKTokenPaused;
-    }   
+    }
+
+    // Storage struct for Mostro Role Manager
+    struct MostroRoleManagerLayout {
+        mapping(address => bool) admins;
+        mapping(address => bool) superAdmins;
+        uint256 adminCount;
+        uint256 superAdminCount;
+    }
+
 }
