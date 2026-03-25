@@ -106,8 +106,6 @@ contract MultisigGovernance {
         proposalExists(proposalId) 
         notExecuted(proposalId) 
     {
-        //require(RoleManagerContract.isSuperAdmin(msg.sender) != true, "Not a super admin");
-        //require(RoleManagerContract.isAdmin(msg.sender) != true, "Not an admin");
         require(MostroRoleManagerFacet(DiamondContract).isSuperAdmin(msg.sender) == true ||
                 MostroRoleManagerFacet(DiamondContract).isAdmin(msg.sender) == true,
             "The msg sender must have the admin or the super admin role"
