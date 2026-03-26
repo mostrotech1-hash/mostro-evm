@@ -20,27 +20,18 @@ contract MostroArtistToken is ERC20 {
 
     // ─── Constructor ──────────────────────────────────────
 
-    constructor() ERC20("", "") {}
-
-    // ─── Initializer ──────────────────────────────────────
-
-    function initialize(
-        string calldata _name,
-        string calldata _symbol,
+    constructor(string memory _name,
+        string memory _symbol,
         uint256 _totalSupply,
-        address _diamond
-    ) external {
-        if (_initialized) revert AlreadyInitialized();
-        if (_diamond == address(0)) revert MustBeANonZeroAddress();
-        if (_totalSupply == 0) revert SupplyMustBeGreaterThanZero();
+        address _diamond) ERC20(_name, _symbol) {
+            if (_diamond == address(0)) revert MustBeANonZeroAddress();
+            if (_totalSupply == 0) revert SupplyMustBeGreaterThanZero();
 
-        _initialized = true;
-        _tokenName = _name;
-        _tokenSymbol = _symbol;
-        factory = _diamond;
-
-        _mint(_diamond, _totalSupply);
+            factory = _diamond;
+            _mint(_diamond, _totalSupply);
     }
+
+    // ─── Functions ──────────────────────────────────────
 
     function name() public view override returns (string memory) {
         return _tokenName;
