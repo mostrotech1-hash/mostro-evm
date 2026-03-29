@@ -9,6 +9,7 @@ interface IVaultDeployerFacet is IMostroStructs {
         address indexed multisig,
         address indexed platformContract,
         address artistUnvestedVault,
+        address artistRevenueVault,
         address lpVault,
         address mostroGenesisWallet,
         address platformUsdcTreasury,
@@ -17,16 +18,31 @@ interface IVaultDeployerFacet is IMostroStructs {
         address unlockedSaleVault
     );
 
+    event TokenAllocationDistributed(
+        address indexed platformContract,
+        address indexed token,
+        uint256 totalAmount,
+        uint256 publicPoolAmount,
+        uint256 streamFlowAmount,
+        uint256 mostroGenesisAmount,
+        uint256 lpVaultAmount
+    );
+
     error ZeroAddress();
     error InvalidContractAddress(address addr);
     error DeploymentAlreadyExists(address platformContract);
+    error InvalidTokenAmount();
 
+    /// @param fundingContract When `totalTokenAmount > 0`, tokens are pulled from this address
+    ///        via `transferFrom` (must approve the Diamond first). Ignored when amount is 0.
     function deployAllVaults(
         address multisig,
         address token,
         address usdc,
         address platformContract,
-        address artist
+        address artist,
+        address fundingContract,
+        uint256 totalTokenAmount
     ) external returns (DeployedVaults memory vaults);
 
     function getDeploymentByPlatformContract(

@@ -40,6 +40,9 @@ contract StreamFlowEscrowVault is BaseVault {
         uint256 unlocksAt,
         uint256 currentTime
     );
+    error StartTimeInPast();
+    error InvalidReleaseAmount();
+    error InvalidArtistVault();
 
     constructor(
         address _multisig,
@@ -47,14 +50,19 @@ contract StreamFlowEscrowVault is BaseVault {
         address _contract
     ) BaseVault(_multisig, _token, _contract) {}
 
+    /*
+     * Initializes the vesting schedule and binds the target artist vault.
+     * No token transfer happens here; this only configures release timing.
+     */
     function startSchedule(
         address _artistUnvestedVault,
         uint256 _startTime
     ) external onlyMultisig {
         if (scheduleInitialised) revert ScheduleAlreadyInitialised();
         if (_artistUnvestedVault == address(0)) revert ZeroAddress();
+        if (_artistUnvestedVault.code.length == 0) revert InvalidArtistVault();
 
-        require(_startTime >= block.timestamp, "Start time is in the past");
+        if (_startTime < block.timestamp) revert StartTimeInPast();
 
         scheduleInitialised = true;
         scheduleStart = _startTime;
@@ -70,6 +78,10 @@ contract StreamFlowEscrowVault is BaseVault {
         );
     }
 
+    /*
+     * Releases vested tokens for a specific period after unlock time.
+     * Token flow: `address(this)` -> `artistUnvestedVault`.
+     */
     function releasePeriod(
         uint256 period,
         uint256 _amount
@@ -77,12 +89,15 @@ contract StreamFlowEscrowVault is BaseVault {
         if (!scheduleInitialised) revert ScheduleNotInitialised();
         if (period == 0 || period > TOTAL_PERIODS) revert InvalidPeriod(period);
         if (periodReleased[period]) revert PeriodAlreadyReleased(period);
+        if (_amount == 0) revert InvalidReleaseAmount();
 
         uint256 unlocksAt = scheduleStart + (period * PERIOD_DURATION);
 
         if (block.timestamp < unlocksAt) {
             revert PeriodNotYetUnlocked(period, unlocksAt, block.timestamp);
         }
+
+        if (_amount > TOKEN.balanceOf(address(this))) revert InsufficientBalance();
 
         periodReleased[period] = true;
 
@@ -91,6 +106,9 @@ contract StreamFlowEscrowVault is BaseVault {
         emit PeriodReleased(period, _amount, unlocksAt, block.timestamp);
     }
 
+    /*
+     * Returns unlock timestamp for the given vesting period.
+     */
     function periodUnlockTime(uint256 period) external view returns (uint256) {
         if (!scheduleInitialised) revert ScheduleNotInitialised();
         if (period == 0 || period > TOTAL_PERIODS) revert InvalidPeriod(period);
@@ -98,12 +116,19 @@ contract StreamFlowEscrowVault is BaseVault {
         return scheduleStart + (period * PERIOD_DURATION);
     }
 
+    /*
+     * Counts how many vesting periods were already released.
+     */
     function releasedPeriodCount() external view returns (uint256 count) {
         for (uint256 i = 1; i <= TOTAL_PERIODS; i++) {
             if (periodReleased[i]) count++;
         }
     }
 
+    /*
+     * One-time controller deposit into stream flow escrow.
+     * Token flow: `from` -> `address(this)`.
+     */
     function depositInStreamFlowVault(
         address from,
         uint256 amount

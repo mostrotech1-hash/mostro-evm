@@ -9,14 +9,24 @@ import {BaseVault} from "./BaseVault.sol";
 contract LPVault is BaseVault {
     string public constant VAULT_NAME = "LPVault";
 
+    /*
+     * Initializes BaseVault with multisig, TOKEN, and controller contract.
+     */
     constructor(address _multisig,address _token, address _contract) BaseVault(_multisig, _token, _contract) {}
 
-    /// @notice Release tokens to the Raydium LP contract.
-    ///         Only callable by the global multisig.
+    /*
+     * Releases TOKEN to LP destination.
+     * Token flow: `address(this)` -> `recipient`.
+     * Callable only by MULTISIG.
+     */
     function release(address recipient, uint256 amount) external onlyMultisig {
         _release(recipient, amount);
     }
 
+    /*
+     * One-time controller deposit into LP vault using BaseVault._deposit.
+     * Token flow: `from` -> `address(this)`.
+     */
     function depositInStreamFlowVault(address from, uint256 amount) external onlyContract {
         _deposit(from,amount);
     }

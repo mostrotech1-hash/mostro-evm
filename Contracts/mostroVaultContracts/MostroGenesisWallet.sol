@@ -10,17 +10,27 @@ import {BaseVault} from "./BaseVault.sol";
 contract MostroGenesisWallet is BaseVault {
     string public constant VAULT_NAME = "MostroGenesisWallet";
 
+    /*
+     * Initializes BaseVault with multisig, TOKEN, and controller contract.
+     */
     constructor(
         address _multisig,
         address _token,
         address _contract
     ) BaseVault(_multisig, _token, _contract) {}
 
-    /// @notice Disburse tokens with a tagged purpose for on-chain auditability.
+    /*
+     * Multisig-controlled token withdrawal.
+     * Token flow: `address(this)` -> `recipient`.
+     */
     function withdraw(address recipient, uint256 amount) external onlyMultisig {
         _release(recipient, amount);
     }
 
+    /*
+     * One-time controller deposit into genesis wallet.
+     * Token flow: `from` -> `address(this)`.
+     */
     function depositInMostroGenesisWallet(
         address from,
         uint256 amount

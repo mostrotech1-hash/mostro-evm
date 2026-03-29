@@ -13,12 +13,19 @@ contract UnlockedSaleVault is BaseVault {
 
     event SaleTransfer(address indexed buyer, uint256 amount);
 
+    /*
+     * Initializes BaseVault with multisig, TOKEN, and controller contract.
+     */
     constructor(
         address _multisig,
         address _token,
         address _contract
     ) BaseVault(_multisig, _token, _contract) {}
 
+    /*
+     * Accepts tranche funding from controller/public pool flow.
+     * Token flow: `from` -> `address(this)`.
+     */
     function receiveFromPublicVault(
         address from,
         uint256 amount

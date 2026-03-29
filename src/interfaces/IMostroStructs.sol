@@ -22,6 +22,7 @@ interface IMostroStructs {
     // Storage struct for vault deployment records
     struct DeployedVaults {
         address artistUnvestedVault;
+        address artistRevenueVault;
         address lpVault;
         address mostroGenesisWallet;
         address platformUsdcTreasury;

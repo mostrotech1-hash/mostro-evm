@@ -10,13 +10,19 @@ import {BaseVault} from "./BaseVault.sol";
 contract PublicPoolVault is BaseVault {
     string public constant VAULT_NAME = "PublicPoolVault";
 
+    /*
+     * Initializes BaseVault with multisig, TOKEN, and controller contract.
+     */
     constructor(
         address _multisig,
         address _token,
         address _contract
     ) BaseVault(_multisig, _token, _contract) {}
 
-    /// @notice Release a tranche to the unlocked sale vault (or any recipient).
+    /*
+     * Multisig-controlled tranche release.
+     * Token flow: `address(this)` -> `destination`.
+     */
     function releaseTranche(
         address destination,
         uint256 amount
@@ -24,6 +30,10 @@ contract PublicPoolVault is BaseVault {
         _release(destination, amount);
     }
 
+    /*
+     * One-time controller deposit into public pool vault.
+     * Token flow: `from` -> `address(this)`.
+     */
     function depositInPublicVault(
         address from,
         uint256 amount
