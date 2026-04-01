@@ -113,7 +113,7 @@ contract MultiSigGovernanceTest is Test {
         governance.executeProposal(1);
     }
 
-    function testExecuteProposalAfterThresholdReached() external {
+    function testExecuteProposalWhenThresholdReached() external {
         bytes memory data = abi.encodeWithSelector(MockTarget.setValue.selector, 77);
         governance.submitProposal(address(target), data, 3);
 
@@ -123,10 +123,14 @@ contract MultiSigGovernanceTest is Test {
         vm.prank(superAdmin);
         governance.approveProposal(1);
 
+        // Vérifier que la valeur n'a pas changé avant exécution
+        assertEq(target.value(), 0);
+
         governance.executeProposal(1);
 
+        // Vérifier que le call a été exécuté correctement
         assertEq(target.value(), 77);
         (, , , , , bool executed) = governance.getProposal(1);
         assertTrue(executed);
-    }
+    } 
 }
