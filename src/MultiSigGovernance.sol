@@ -25,7 +25,7 @@ contract MultisigGovernance {
 
     // ==================== Variables =====================
 
-    uint256 proposalCount;
+    uint256 proposalCount = 1;
     address public immutable DiamondContract;
     mapping(uint256 => Proposal) proposals;
     mapping(address => bool) signers;
