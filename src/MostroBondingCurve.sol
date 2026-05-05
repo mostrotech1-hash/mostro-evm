@@ -2,10 +2,11 @@
 pragma solidity ^0.8.20;
 
 import {MostroArtistToken} from "./MostroArtistToken.sol";
+/* import {UnlockedSaleVaultFacet} from "./facets/UnlockedSaleVaultFacet.sol";*/
 
 /**
  * @title MostroBondingCurve
- * @dev This bonding curve will be connected to 2 vaults: PublicPoolVault and UnlockedSaleVault.
+ * @dev This bonding curve will be connected to UnlockedSaleVault.
  * @dev The price of the token increases as more tokens are minted, following a linear bonding curve.
  */
 
@@ -13,29 +14,38 @@ contract MostroBondingCurve {
 
     // ==================== State Variables =====================
 
+    address public immutable DiamondContract;
     MostroArtistToken public immutable artistToken;
-    uint256 public totalSupply;
-    /* uint256 public constant BASE_PRICE = 0.01 ether; // Base price for the first token
-    uint256 public constant PRICE_INCREMENT = 0.001 ether; // Price increase per token minted */
+    //UnlockedSaleVaultFacet public immutable saleVault;
+    uint256 public tokensSold; // Total number of tokens solded through the bonding curve
+    uint256 public constant BASE_PRICE = 0.01 ether; // Base price for the first token
+    uint256 public constant SLOPE = 0.001 ether; // Price increase per token minted */
 
     // ==================== Events =====================
 
     event Buy(address indexed buyer, uint256 amount, uint256 cost);
-    event Sell(address indexed seller, uint256 amount, uint256 cost);
 
     // ==================== Constructor =====================
 
-    constructor(MostroArtistToken _artistToken) {
-        artistToken = _artistToken;
+    constructor(address _diamondContract) {
+        DiamondContract = _diamondContract;
+        artistToken = MostroArtistToken(_diamondContract);
+        //saleVault = UnlockedSaleVaultFacet(_diamondContract);
     }
 
     // ==================== Public Functions =====================
 
 
-    function k() public view returns (uint256) {
+    function getCurrentPrice() public view returns (uint256) {
+        return BASE_PRICE + SLOPE * tokensSold;
     }
 
-    function spot() public view returns (uint256) {
+    function calculateCost(uint256 amount) public view returns (uint256) {
+        uint256 cost = 0;
+        for (uint256 i = 0; i < amount; i++) {
+            cost += BASE_PRICE + SLOPE * (tokensSold + i);
+        }
+        return cost;
     }
 
     /**
@@ -46,11 +56,4 @@ contract MostroBondingCurve {
         
     }
 
-    /**
-     * @dev Allows users to sell their tokens and receive a refund based on the bonding curve.
-     * @param amount The number of tokens to sell.
-     */
-    function sell(uint256 amount) external {
-        
-    }
 }
