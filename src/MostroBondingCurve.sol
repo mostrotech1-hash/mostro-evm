@@ -41,11 +41,14 @@ contract MostroBondingCurve {
     }
 
     function calculateCost(uint256 amount) public view returns (uint256) {
-        uint256 cost = 0;
-        for (uint256 i = 0; i < amount; i++) {
-            cost += BASE_PRICE + SLOPE * (tokensSold + i);
-        }
-        return cost;
+    require(amount > 0, "Amount is zero");
+
+    uint256 start = tokensSold;
+    uint256 end = start + amount;
+
+    return
+        BASE_PRICE * amount +
+        (SLOPE * (end * (end - 1) - start * (start - 1))) / 2;
     }
 
     /**
