@@ -66,4 +66,32 @@ library MostroRoleManagerStorage {
         bytes32 slot = STORAGE_SLOT;
         assembly {l.slot := slot}
     }
+
+    library MostroTokenFactory {
+    bytes32 internal constant STORAGE_SLOT =
+    keccak256("mostro.storage.token.factory");
+
+    function layout()
+    internal
+    view
+    returns (IMostroStructs.MostroRoleManagerLayout storage l)
+    {
+        bytes32 slot = STORAGE_SLOT;
+        assembly {l.slot := slot}
+    }
+}
+
+library TokenFactoryStorage {
+
+    bytes32 internal constant STORAGE_SLOT =
+        keccak256("mostro.storage.token.factory");
+
+    function layout()
+        internal
+        pure
+        returns (IMostroStructs.TokenFactoryLayout storage l)
+    {
+        bytes32 slot = STORAGE_SLOT;
+        assembly { l.slot := slot }
+    }
 }
