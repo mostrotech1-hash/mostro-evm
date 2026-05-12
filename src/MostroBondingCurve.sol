@@ -64,11 +64,12 @@ contract MostroBondingCurve {
         require(amount <= artistToken.balanceOf(saleVault), "Not enough tokens available");
         uint256 cost = calculateCost(amount);
 
+        // Effects before interactions (CEI)
+        tokensSold += amount;
+
         // Pull USDC from buyer to the vault
         bool usdcSent = usdc.transferFrom(msg.sender, saleVault, cost);
         require(usdcSent, "USDC transfer failed");
-
-        tokensSold += amount;
 
         // Push artist tokens from vault to buyer
         bool tokenSent = artistToken.transferFrom(saleVault, msg.sender, amount);
