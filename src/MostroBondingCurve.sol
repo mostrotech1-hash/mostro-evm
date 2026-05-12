@@ -20,12 +20,21 @@ contract MostroBondingCurve {
     IERC20 public immutable usdc;
     address public immutable saleVault; // UnlockedSaleVaultFacet lives at DiamondContract
     uint256 public tokensSold; // Total number of tokens solded through the bonding curve
-    uint256 public constant BASE_PRICE = 0.01 ether; // Base price for the first token
-    uint256 public constant SLOPE = 0.001 ether; // Price increase per token minted */
+    bool public paused;
+    uint256 public constant BASE_PRICE = 10_000;  // 0.01 USDC (6 decimals)
+    uint256 public constant SLOPE      = 1_000;   // 0.001 USDC (6 decimals)
 
     // ==================== Events =====================
 
     event Buy(address indexed buyer, uint256 amount, uint256 cost);
+    event PausedUpdated(bool paused);
+
+    // ==================== Modifiers =====================
+
+    modifier whenNotPaused() {
+        require(!paused, "Contract is paused");
+        _;
+    }
 
     // ==================== Constructor =====================
 
@@ -56,13 +65,16 @@ contract MostroBondingCurve {
             (SLOPE * (end * (end - 1) - start * (start - 1))) / 2;
     }
 
-    /**
-     * @dev Allows users to purchase tokens from the bonding curve.
-     * @param amount The number of tokens to purchase.
-     */
-    function buy(uint256 amount) external {
+    function setPaused(bool _paused) external {
+        require(msg.sender == DiamondContract, "Only Diamond can pause");
+        paused = _paused;
+        emit PausedUpdated(_paused);
+    }
+
+    function buy(uint256 amount, uint256 maxCost) external whenNotPaused {
         require(amount <= artistToken.balanceOf(saleVault), "Not enough tokens available");
         uint256 cost = calculateCost(amount);
+        require(cost <= maxCost, "Slippage exceeded");
 
         // Effects before interactions (CEI)
         tokensSold += amount;
