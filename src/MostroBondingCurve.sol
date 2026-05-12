@@ -30,6 +30,9 @@ contract MostroBondingCurve {
     // ==================== Constructor =====================
 
     constructor(address _diamondContract, address _artistToken, address _usdc) {
+        require(_diamondContract != address(0), "Invalid diamond");
+        require(_artistToken != address(0), "Invalid token");
+        require(_usdc != address(0), "Invalid USDC");
         DiamondContract = _diamondContract;
         artistToken = MostroArtistToken(_artistToken);
         usdc = IERC20(_usdc);
@@ -58,6 +61,7 @@ contract MostroBondingCurve {
      * @param amount The number of tokens to purchase.
      */
     function buy(uint256 amount) external {
+        require(amount <= artistToken.balanceOf(saleVault), "Not enough tokens available");
         uint256 cost = calculateCost(amount);
 
         // Pull USDC from buyer to the vault
