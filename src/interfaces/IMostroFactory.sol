@@ -13,17 +13,16 @@ interface IMostroFactory {
     // ─── Errors ───────────────────────────────────────────
 
     error MustBeANonZeroAddress();
+    error InvalidArtistName();
     error ArtistAlreadyExists();
     error ArtistDoesNotExist();
     error TokenCreationFailed();
     error VaultCreationFailed();
+    error Unauthorized();
 
     // ─── Factory Functions ─────────────────────────────────
 
-    function createArtistToken(string calldata artistName) external returns (address);
-    function createPublicPoolVault(address tokenAddress) external returns (address);
-    function createStreamflowEscrowVault(address tokenAddress) external returns (address);
-    function createLPVault(address tokenAddress) external returns (address);
+    function createArtistToken(string calldata artistName, string calldata symbol) external returns (address);
 
     // ─── View Functions ───────────────────────────────────
 

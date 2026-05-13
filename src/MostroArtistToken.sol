@@ -17,10 +17,14 @@ contract MostroArtistToken is ERC20 {
     error AlreadyInitialized();
     error MustBeANonZeroAddress();
     error SupplyMustBeGreaterThanZero();
+    error OnlyFactory();
 
     // ─── Constructor ──────────────────────────────────────
 
-    constructor() ERC20("", "") {}
+    constructor(address _factory) ERC20("", "") {
+        if (_factory == address(0)) revert MustBeANonZeroAddress();
+        factory = _factory;
+    }
 
     // ─── Initializer ──────────────────────────────────────
 
@@ -30,6 +34,7 @@ contract MostroArtistToken is ERC20 {
         uint256 _totalSupply,
         address _diamond
     ) external {
+        if (msg.sender != factory) revert OnlyFactory();
         if (_initialized) revert AlreadyInitialized();
         if (_diamond == address(0)) revert MustBeANonZeroAddress();
         if (_totalSupply == 0) revert SupplyMustBeGreaterThanZero();
