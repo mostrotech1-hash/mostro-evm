@@ -27,4 +27,12 @@ interface IMostroStructs {
         uint256 superAdminCount;
     }
 
+    // Storage struct for Mostro Factory
+    struct MostroFactoryLayout {
+        uint256 artistCount;
+        mapping(string => address) artistTokens;             // artist name => token address
+        mapping(address => address) publicPoolVaults;        // artist token => publicPoolVault address
+        mapping(address => address) streamflowEscrowVaults;  // artist token => streamflowEscrowVault address
+        mapping(address => address) lpVaults;                // artist token => LPVault address
+    }
 }

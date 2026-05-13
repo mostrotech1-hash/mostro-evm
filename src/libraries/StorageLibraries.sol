@@ -67,3 +67,17 @@ library MostroRoleManagerStorage {
         assembly {l.slot := slot}
     }
 }
+
+library MostroFactoryStorage {
+    bytes32 internal constant STORAGE_SLOT =
+    keccak256("mostro.storage.mostro.factory");
+
+    function layout()
+    internal
+    view
+    returns (IMostroStructs.MostroFactoryLayout storage l)
+    {
+        bytes32 slot = STORAGE_SLOT;
+        assembly {l.slot := slot}
+    }
+}
