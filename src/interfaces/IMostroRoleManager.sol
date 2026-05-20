@@ -35,9 +35,4 @@ interface IMostroRoleManager {
     function isSuperAdmin(address _account) external view returns (bool);
     function getTotalVoteWeight() external view returns (uint256);
 
-    // ─── State Variables ──────────────────────────────────
-
-    // function adminCount() external view returns (uint256);
-    // function superAdminCount() external view returns (uint256);
-
 }

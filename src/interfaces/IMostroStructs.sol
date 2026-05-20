@@ -27,37 +27,34 @@ interface IMostroStructs {
         uint256 superAdminCount;
     }
 
-    // Storage struct for Token Factory
     struct VaultAddresses {
-        address publicPoolVault;
-        address streamFlowEscrowVault;
-        address mostroGenesisWallet;
-        address lpVault;
-        address platformUsdcTreasury;
-        address unlockedSaleVault;
-        address artistUnvestedVault;
+        // Hot Vaults — to be populated when Hot/Cold Vault Facets are integrated
+        address[] hotVaults;
+        // Cold Vaults — to be populated when Hot/Cold Vault Facets are integrated
+        address[] coldVaults;
     }
 
-    struct TokenRecord {
-        address tokenAddress;
+    struct ArtistStorageLayout {
+        // artist ID => ArtistRecord
+        mapping(uint256 => ArtistRecord) artistsById;
+        // token address => artist ID
+        mapping(address => uint256) artistIdByToken;
+        // artist name hash => artist ID (duplicate name guard)
+        mapping(bytes32 => uint256) artistIdByNameHash;
+        // total number of artists created — also used as next ID seed
+        uint256 artistCount;
+    }
+
+    struct ArtistRecord {
+        uint256 artistId;
+        string  artistName;
         string  tokenName;
         string  tokenSymbol;
-        address artistWallet;
+        address tokenAddress;
         uint256 totalSupply;
-        uint256 launchTimestamp;
+        address beneficiaryWallet;  // optional
         VaultAddresses vaults;
+        uint256 createdTimestamp;
+        bool    active;
     }
-
-    struct TokenFactoryLayout {
-        // token address => TokenRecord
-        mapping(address => TokenRecord) tokenRecords;
-        // artist wallet => token addresses
-        mapping(address => address[]) tokensByArtist;
-        // token address => artist wallet
-        mapping(address => address) artistByToken;
-        // all launched token addresses
-        address[] allLaunchedTokens;
-    }
-
-
 }
