@@ -4,11 +4,11 @@ pragma solidity ^0.8.20;
 import {IMostroFactory} from '../interfaces/IMostroFactory.sol';
 import {IMostroStructs} from '../interfaces/IMostroStructs.sol';
 import {MostroFactoryStorage, MostroRoleManagerStorage} from '../libraries/StorageLibraries.sol';
-import {LibDiamond} from '../libraries/LibDiamond.sol';
 import {MostroArtistToken} from '../MostroArtistToken.sol';
 import {PublicPoolVault} from '../vaults/PublicPoolVault.sol';
 import {StreamflowEscrowVault} from '../vaults/StreamflowEscrowVault.sol';
 import {LPVault} from '../vaults/LPVault.sol';
+import {GenesisVault} from '../vaults/GenesisVault.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
 /**
@@ -52,16 +52,12 @@ contract MostroFactoryFacet is IMostroStructs, IMostroFactory {
         s.artistTokens[artistName] = tokenAddress;
         s.artistCount++;
 
-        address genesis = LibDiamond.diamondStorage().contractOwner;
-
         emit ArtistTokenCreated(artistName, tokenAddress);
 
         _deployPublicPoolVault(tokenAddress, s);
         _deployStreamflowEscrowVault(tokenAddress, s);
         _deployLPVault(tokenAddress, s);
-
-        uint256 remaining = IERC20(tokenAddress).balanceOf(address(this));
-        if (!IERC20(tokenAddress).transfer(genesis, remaining)) revert TokenCreationFailed();
+        _deployGenesisVault(tokenAddress, s);
 
         return tokenAddress;
     }
@@ -84,6 +80,10 @@ contract MostroFactoryFacet is IMostroStructs, IMostroFactory {
         return MostroFactoryStorage.layout().lpVaults[tokenAddress];
     }
 
+    function getGenesisVault(address tokenAddress) external view returns (address) {
+        return MostroFactoryStorage.layout().genesisVaults[tokenAddress];
+    }
+
     // ─── Internal Helpers ─────────────────────────────────
 
     function _deployPublicPoolVault(address tokenAddress, MostroFactoryLayout storage s) internal returns (address) {
@@ -103,6 +103,16 @@ contract MostroFactoryFacet is IMostroStructs, IMostroFactory {
 
         s.streamflowEscrowVaults[tokenAddress] = vaultAddress;
         emit StreamflowEscrowVaultCreated(tokenAddress, vaultAddress);
+        return vaultAddress;
+    }
+
+    function _deployGenesisVault(address tokenAddress, MostroFactoryLayout storage s) internal returns (address) {
+        address vaultAddress = address(new GenesisVault(tokenAddress, address(this)));
+        uint256 remaining = IERC20(tokenAddress).balanceOf(address(this));
+        if (!IERC20(tokenAddress).transfer(vaultAddress, remaining)) revert VaultCreationFailed();
+
+        s.genesisVaults[tokenAddress] = vaultAddress;
+        emit GenesisVaultCreated(tokenAddress, vaultAddress);
         return vaultAddress;
     }
 

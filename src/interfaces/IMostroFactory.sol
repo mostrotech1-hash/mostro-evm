@@ -9,6 +9,7 @@ interface IMostroFactory {
     event PublicPoolVaultCreated(address indexed tokenAddress, address indexed vaultAddress);
     event StreamflowEscrowVaultCreated(address indexed tokenAddress, address indexed vaultAddress);
     event LPVaultCreated(address indexed tokenAddress, address indexed vaultAddress);
+    event GenesisVaultCreated(address indexed tokenAddress, address indexed vaultAddress);
 
     // ─── Errors ───────────────────────────────────────────
 
@@ -30,5 +31,6 @@ interface IMostroFactory {
     function getPublicPoolVault(address tokenAddress) external view returns (address);
     function getStreamflowEscrowVault(address tokenAddress) external view returns (address);
     function getLPVault(address tokenAddress) external view returns (address);
+    function getGenesisVault(address tokenAddress) external view returns (address);
 
 }

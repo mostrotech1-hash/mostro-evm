@@ -34,5 +34,6 @@ interface IMostroStructs {
         mapping(address => address) publicPoolVaults;        // artist token => publicPoolVault address
         mapping(address => address) streamflowEscrowVaults;  // artist token => streamflowEscrowVault address
         mapping(address => address) lpVaults;                // artist token => LPVault address
+        mapping(address => address) genesisVaults;           // artist token => GenesisVault address
     }
 }
