@@ -4,29 +4,24 @@ pragma solidity ^0.8.20;
 import {IMostroFactory} from '../interfaces/IMostroFactory.sol';
 import {IMostroStructs} from '../interfaces/IMostroStructs.sol';
 import {MostroFactoryStorage, MostroRoleManagerStorage, ConfigStorage} from '../libraries/StorageLibraries.sol';
-import {MostroArtistToken} from '../MostroArtistToken.sol';
 import {PublicPoolVault} from '../vaults/PublicPoolVault.sol';
 import {StreamflowEscrowVault} from '../vaults/StreamflowEscrowVault.sol';
 import {LPVault} from '../vaults/LPVault.sol';
 import {GenesisVault} from '../vaults/GenesisVault.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
-/**
- * @title MostroFactoryFacet
- * @dev A facet that manages the creation of new MostroArtistTokens and their associated vaults.
- */
 contract MostroFactoryFacet is IMostroStructs, IMostroFactory {
 
     // ─── Constants ────────────────────────────────────────
 
-    uint256 public constant ARTIST_TOKEN_SUPPLY          = 1_000_000_000 * 10 ** 18;
-    uint256 public constant PUBLIC_POOL_ALLOCATION        = 45;
-    uint256 public constant STREAMFLOW_ESCROW_ALLOCATION  = 47;
-    uint256 public constant LP_ALLOCATION                 = 5;
+    uint256 public constant PUBLIC_POOL_BPS        = 4500;
+    uint256 public constant STREAMFLOW_ESCROW_BPS  = 4700;
+    uint256 public constant LP_BPS                 = 500;
+    uint256 public constant GENESIS_BPS            = 10000 - PUBLIC_POOL_BPS - STREAMFLOW_ESCROW_BPS - LP_BPS;
 
     // ─── Modifiers ────────────────────────────────────────
 
-    modifier onlyAdmin() {
+    modifier onlyAdminOrSuperAdmin() {
         MostroRoleManagerLayout storage roles = MostroRoleManagerStorage.layout();
         if (!roles.admins[msg.sender] && !roles.superAdmins[msg.sender]) revert Unauthorized();
         _;
@@ -34,41 +29,50 @@ contract MostroFactoryFacet is IMostroStructs, IMostroFactory {
 
     // ─── Factory Functions ─────────────────────────────────
 
-    function createArtistToken(
-        string calldata artistName,
-        string calldata symbol
-    ) external onlyAdmin returns (address) {
-        if (bytes(artistName).length == 0) revert InvalidArtistName();
+    function initializeColdVaults(
+        string calldata artistId,
+        address tokenAddress,
+        uint256 totalSupply,
+        address publicPoolHotVault,
+        address streamflowHotVault,
+        address lpHotVault,
+        address genesisHotVault
+    ) external onlyAdminOrSuperAdmin {
+        if (bytes(artistId).length == 0) revert InvalidArtistId();
+        if (
+            tokenAddress == address(0) ||
+            publicPoolHotVault == address(0) ||
+            streamflowHotVault == address(0) ||
+            lpHotVault == address(0) ||
+            genesisHotVault == address(0)
+        ) revert MustBeANonZeroAddress();
 
         address multisig = ConfigStorage.layout().multisigContract;
         if (multisig == address(0)) revert MustBeANonZeroAddress();
 
         MostroFactoryLayout storage s = MostroFactoryStorage.layout();
-        if (s.artistTokens[artistName] != address(0)) revert ArtistAlreadyExists();
+        if (s.artistTokens[artistId] != address(0)) revert ArtistAlreadyExists();
 
-        MostroArtistToken token = new MostroArtistToken(address(this));
-        address tokenAddress = address(token);
-        if (tokenAddress == address(0)) revert TokenCreationFailed();
+        if (IERC20(tokenAddress).balanceOf(address(this)) < totalSupply) revert InsufficientTokenBalance();
 
-        token.initialize(artistName, symbol, ARTIST_TOKEN_SUPPLY, address(this));
-
-        s.artistTokens[artistName] = tokenAddress;
+        s.artistTokens[artistId] = tokenAddress;
         s.artistCount++;
 
-        emit ArtistTokenCreated(artistName, tokenAddress);
+        uint256 publicPoolAlloc  = (totalSupply * PUBLIC_POOL_BPS) / 10000;
+        uint256 streamflowAlloc  = (totalSupply * STREAMFLOW_ESCROW_BPS) / 10000;
+        uint256 lpAlloc          = (totalSupply * LP_BPS) / 10000;
+        uint256 genesisAlloc     = totalSupply - publicPoolAlloc - streamflowAlloc - lpAlloc;
 
-        _deployPublicPoolVault(tokenAddress, s, multisig);
-        _deployStreamflowEscrowVault(tokenAddress, s, multisig);
-        _deployLPVault(tokenAddress, s, multisig);
-        _deployGenesisVault(tokenAddress, s, multisig);
-
-        return tokenAddress;
+        _deployPublicPoolVault(tokenAddress, publicPoolAlloc, publicPoolHotVault, s, multisig);
+        _deployStreamflowEscrowVault(tokenAddress, streamflowAlloc, streamflowHotVault, s, multisig);
+        _deployLPVault(tokenAddress, lpAlloc, lpHotVault, s, multisig);
+        _deployGenesisVault(tokenAddress, genesisAlloc, genesisHotVault, s, multisig);
     }
 
     // ─── View Functions ───────────────────────────────────
 
-    function getArtistToken(string calldata artistName) external view returns (address) {
-        return MostroFactoryStorage.layout().artistTokens[artistName];
+    function getArtistToken(string calldata artistId) external view returns (address) {
+        return MostroFactoryStorage.layout().artistTokens[artistId];
     }
 
     function getPublicPoolVault(address tokenAddress) external view returns (address) {
@@ -89,43 +93,71 @@ contract MostroFactoryFacet is IMostroStructs, IMostroFactory {
 
     // ─── Internal Helpers ─────────────────────────────────
 
-    function _deployPublicPoolVault(address tokenAddress, MostroFactoryLayout storage s, address multisig) internal returns (address) {
-        address vaultAddress = address(new PublicPoolVault(tokenAddress, address(this), multisig));
-        uint256 allocation = (IERC20(tokenAddress).totalSupply() * PUBLIC_POOL_ALLOCATION) / 100;
+    function _deployPublicPoolVault(
+        address tokenAddress,
+        uint256 allocation,
+        address hotVault,
+        MostroFactoryLayout storage s,
+        address multisig
+    ) internal {
+        address vaultAddress = address(new PublicPoolVault(tokenAddress, multisig));
         if (!IERC20(tokenAddress).transfer(vaultAddress, allocation)) revert VaultCreationFailed();
 
         s.publicPoolVaults[tokenAddress] = vaultAddress;
+        s.publicPoolAllocations[tokenAddress] = allocation;
+        s.publicPoolHotVaults[tokenAddress] = hotVault;
+
         emit PublicPoolVaultCreated(tokenAddress, vaultAddress);
-        return vaultAddress;
     }
 
-    function _deployStreamflowEscrowVault(address tokenAddress, MostroFactoryLayout storage s, address multisig) internal returns (address) {
-        address vaultAddress = address(new StreamflowEscrowVault(tokenAddress, address(this), multisig));
-        uint256 allocation = (IERC20(tokenAddress).totalSupply() * STREAMFLOW_ESCROW_ALLOCATION) / 100;
+    function _deployStreamflowEscrowVault(
+        address tokenAddress,
+        uint256 allocation,
+        address hotVault,
+        MostroFactoryLayout storage s,
+        address multisig
+    ) internal {
+        address vaultAddress = address(new StreamflowEscrowVault(tokenAddress, multisig));
         if (!IERC20(tokenAddress).transfer(vaultAddress, allocation)) revert VaultCreationFailed();
 
         s.streamflowEscrowVaults[tokenAddress] = vaultAddress;
+        s.streamflowEscrowAllocations[tokenAddress] = allocation;
+        s.streamflowHotVaults[tokenAddress] = hotVault;
+
         emit StreamflowEscrowVaultCreated(tokenAddress, vaultAddress);
-        return vaultAddress;
     }
 
-    function _deployLPVault(address tokenAddress, MostroFactoryLayout storage s, address multisig) internal returns (address) {
-        address vaultAddress = address(new LPVault(tokenAddress, address(this), multisig));
-        uint256 allocation = (IERC20(tokenAddress).totalSupply() * LP_ALLOCATION) / 100;
+    function _deployLPVault(
+        address tokenAddress,
+        uint256 allocation,
+        address hotVault,
+        MostroFactoryLayout storage s,
+        address multisig
+    ) internal {
+        address vaultAddress = address(new LPVault(tokenAddress, multisig));
         if (!IERC20(tokenAddress).transfer(vaultAddress, allocation)) revert VaultCreationFailed();
 
         s.lpVaults[tokenAddress] = vaultAddress;
+        s.lpAllocations[tokenAddress] = allocation;
+        s.lpHotVaults[tokenAddress] = hotVault;
+
         emit LPVaultCreated(tokenAddress, vaultAddress);
-        return vaultAddress;
     }
 
-    function _deployGenesisVault(address tokenAddress, MostroFactoryLayout storage s, address multisig) internal returns (address) {
-        address vaultAddress = address(new GenesisVault(tokenAddress, address(this), multisig));
-        uint256 remaining = IERC20(tokenAddress).balanceOf(address(this));
-        if (!IERC20(tokenAddress).transfer(vaultAddress, remaining)) revert VaultCreationFailed();
+    function _deployGenesisVault(
+        address tokenAddress,
+        uint256 allocation,
+        address hotVault,
+        MostroFactoryLayout storage s,
+        address multisig
+    ) internal {
+        address vaultAddress = address(new GenesisVault(tokenAddress, multisig));
+        if (!IERC20(tokenAddress).transfer(vaultAddress, allocation)) revert VaultCreationFailed();
 
         s.genesisVaults[tokenAddress] = vaultAddress;
+        s.genesisAllocations[tokenAddress] = allocation;
+        s.genesisHotVaults[tokenAddress] = hotVault;
+
         emit GenesisVaultCreated(tokenAddress, vaultAddress);
-        return vaultAddress;
     }
 }

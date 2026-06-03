@@ -4,6 +4,6 @@ pragma solidity ^0.8.20;
 import {BaseColdVault} from "./BaseColdVault.sol";
 
 contract GenesisVault is BaseColdVault {
-    constructor(address _artistToken, address _diamond, address _releaseController)
-        BaseColdVault(_artistToken, _diamond, _releaseController) {}
+    constructor(address _artistToken, address _releaseController)
+        BaseColdVault(_artistToken, _releaseController) {}
 }

@@ -8,7 +8,6 @@ abstract contract BaseColdVault {
     // ─── State Variables ──────────────────────────────────
 
     address public immutable artistToken;
-    address public immutable diamond;
     address public immutable releaseController;
 
     mapping(address => bool) public approvedDestinations;
@@ -16,7 +15,6 @@ abstract contract BaseColdVault {
     // ─── Events ───────────────────────────────────────────
 
     event DestinationApproved(address indexed destination);
-    event DestinationRevoked(address indexed destination);
     event TokensReleased(address indexed destination, uint256 amount);
 
     // ─── Errors ───────────────────────────────────────────
@@ -25,7 +23,6 @@ abstract contract BaseColdVault {
     error OnlyReleaseController();
     error DestinationNotApproved();
     error DestinationAlreadyApproved();
-    error DestinationNotRegistered();
     error TransferFailed();
 
     // ─── Modifier ─────────────────────────────────────────
@@ -37,11 +34,10 @@ abstract contract BaseColdVault {
 
     // ─── Constructor ──────────────────────────────────────
 
-    constructor(address _artistToken, address _diamond, address _releaseController) {
-        if (_artistToken == address(0) || _diamond == address(0) || _releaseController == address(0))
+    constructor(address _artistToken, address _releaseController) {
+        if (_artistToken == address(0) || _releaseController == address(0))
             revert MustBeANonZeroAddress();
         artistToken = _artistToken;
-        diamond = _diamond;
         releaseController = _releaseController;
     }
 
@@ -54,21 +50,9 @@ abstract contract BaseColdVault {
         emit DestinationApproved(destination);
     }
 
-    function revokeDestination(address destination) external onlyReleaseController {
-        if (!approvedDestinations[destination]) revert DestinationNotRegistered();
-        approvedDestinations[destination] = false;
-        emit DestinationRevoked(destination);
-    }
-
     function release(address destination, uint256 amount) external onlyReleaseController {
         if (!approvedDestinations[destination]) revert DestinationNotApproved();
         if (!IERC20(artistToken).transfer(destination, amount)) revert TransferFailed();
         emit TokensReleased(destination, amount);
-    }
-
-    // ─── View Functions ───────────────────────────────────
-
-    function balance() external view returns (uint256) {
-        return IERC20(artistToken).balanceOf(address(this));
     }
 }
