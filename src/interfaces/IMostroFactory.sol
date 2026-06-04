@@ -25,7 +25,7 @@ interface IMostroFactory {
     // ─── Factory Functions ─────────────────────────────────
 
     function initializeColdVaults(
-        string calldata artistId,
+        bytes32 artistId,
         address tokenAddress,
         uint256 totalSupply,
         address publicPoolHotVault,
@@ -36,7 +36,7 @@ interface IMostroFactory {
 
     // ─── View Functions ───────────────────────────────────
 
-    function getArtistToken(string calldata artistId) external view returns (address);
+    function getArtistToken(bytes32 artistId) external view returns (address);
     function getPublicPoolVault(address tokenAddress) external view returns (address);
     function getStreamflowEscrowVault(address tokenAddress) external view returns (address);
     function getLPVault(address tokenAddress) external view returns (address);

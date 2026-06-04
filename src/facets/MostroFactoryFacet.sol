@@ -87,7 +87,9 @@ contract MostroFactoryFacet is IMostroStructs, IMostroFactory {
      *      Emits {PublicPoolVaultCreated}, {StreamflowEscrowVaultCreated}, {LPVaultCreated},
      *      and {GenesisVaultCreated}.
      *
-     * @param artistId           Unique string identifier for the artist. Immutable once registered.
+     * @param artistId           keccak256 hash of the artist's unique string identifier.
+     *                           Use keccak256(abi.encodePacked("artist-name")) off-chain.
+     *                           Immutable once registered.
      * @param tokenAddress       Address of the ERC20 artist token. The Diamond must hold at least
      *                           `totalSupply` of this token before the call.
      * @param totalSupply        Expected total token supply in base units. Used for allocation
@@ -100,7 +102,7 @@ contract MostroFactoryFacet is IMostroStructs, IMostroFactory {
      * @param genesisHotVault    Intended downstream hot vault for the genesis cold vault.
      */
     function initializeColdVaults(
-        string calldata artistId,
+        bytes32 artistId,
         address tokenAddress,
         uint256 totalSupply,
         address publicPoolHotVault,
@@ -108,7 +110,7 @@ contract MostroFactoryFacet is IMostroStructs, IMostroFactory {
         address lpHotVault,
         address genesisHotVault
     ) external onlyAdminOrSuperAdmin nonReentrant {
-        if (bytes(artistId).length == 0) revert InvalidArtistId();
+        if (artistId == bytes32(0)) revert InvalidArtistId();
         if (totalSupply == 0) revert InvalidTotalSupply();
         if (
             tokenAddress == address(0) ||
@@ -147,7 +149,7 @@ contract MostroFactoryFacet is IMostroStructs, IMostroFactory {
      * @notice Returns the ERC20 token address registered for `artistId`.
      * @return Zero address if the artist has not been initialized.
      */
-    function getArtistToken(string calldata artistId) external view returns (address) {
+    function getArtistToken(bytes32 artistId) external view returns (address) {
         return MostroFactoryStorage.layout().artistTokens[artistId];
     }
 

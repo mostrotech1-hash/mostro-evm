@@ -35,7 +35,7 @@ interface IMostroStructs {
     // Storage struct for Mostro Factory
     struct MostroFactoryLayout {
         uint256 artistCount;
-        mapping(string => address) artistTokens;             // artist id => token address
+        mapping(bytes32 => address) artistTokens;            // keccak256(artistId) => token address
         mapping(address => address) publicPoolVaults;        // artist token => publicPoolVault address
         mapping(address => address) streamflowEscrowVaults;  // artist token => streamflowEscrowVault address
         mapping(address => address) lpVaults;                // artist token => LPVault address
