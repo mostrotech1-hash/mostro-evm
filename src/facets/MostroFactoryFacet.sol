@@ -130,7 +130,7 @@ contract MostroFactoryFacet is IMostroStructs, IMostroFactory {
         if (IERC20(tokenAddress).balanceOf(address(this)) < totalSupply) revert InsufficientTokenBalance();
 
         s.artistTokens[artistId] = tokenAddress;
-        s.artistCount++;
+        unchecked { s.artistCount++; }
 
         uint256 publicPoolAlloc  = (totalSupply * PUBLIC_POOL_BPS) / 10000;
         uint256 streamflowAlloc  = (totalSupply * STREAMFLOW_ESCROW_BPS) / 10000;
