@@ -18,6 +18,7 @@ interface IMostroFactory {
     error VaultCreationFailed();
     error InsufficientTokenBalance();
     error TotalSupplyMismatch();
+    error InvalidTotalSupply();
     error Unauthorized();
 
     // ─── Factory Functions ─────────────────────────────────

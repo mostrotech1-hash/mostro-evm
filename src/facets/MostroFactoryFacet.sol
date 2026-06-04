@@ -93,6 +93,7 @@ contract MostroFactoryFacet is IMostroStructs, IMostroFactory {
         address genesisHotVault
     ) external onlyAdminOrSuperAdmin {
         if (bytes(artistId).length == 0) revert InvalidArtistId();
+        if (totalSupply == 0) revert InvalidTotalSupply();
         if (
             tokenAddress == address(0) ||
             publicPoolHotVault == address(0) ||
