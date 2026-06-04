@@ -166,117 +166,59 @@ contract MostroFactoryFacet is IMostroStructs, IMostroFactory {
 
     // ─── Internal Helpers ─────────────────────────────────
 
-    /**
-     * @dev Deploys a {PublicPoolVault}, transfers `allocation` tokens to it, and persists
-     *      vault address, allocation amount, and intended hot vault in Diamond storage.
-     *      Reverts with {VaultCreationFailed} if the ERC20 transfer returns false.
-     *      Emits {PublicPoolVaultCreated}.
-     * @param tokenAddress Artist ERC20 token address.
-     * @param allocation   Token amount to transfer to the vault, in base units.
-     * @param hotVault     Intended downstream destination, registered for multisig reference.
-     * @param s            Reference to the Diamond factory storage layout.
-     * @param multisig     Address assigned as the vault's sole release controller.
-     */
-    function _deployPublicPoolVault(
-        address tokenAddress,
-        uint256 allocation,
-        address hotVault,
-        MostroFactoryLayout storage s,
-        address multisig
-    ) internal {
+    /// @dev Thin wrapper — deploys the vault contract then delegates to {_fundAndRegisterVault}.
+    function _deployPublicPoolVault(address tokenAddress, uint256 allocation, address hotVault, MostroFactoryLayout storage s, address multisig) internal {
         address vaultAddress = address(new PublicPoolVault(tokenAddress, multisig));
-        if (!IERC20(tokenAddress).transfer(vaultAddress, allocation)) revert VaultCreationFailed();
-
-        s.publicPoolVaults[tokenAddress] = vaultAddress;
-        s.publicPoolAllocations[tokenAddress] = allocation;
-        s.publicPoolHotVaults[tokenAddress] = hotVault;
-
+        _fundAndRegisterVault(vaultAddress, tokenAddress, allocation, hotVault, s.publicPoolVaults, s.publicPoolAllocations, s.publicPoolHotVaults);
         emit PublicPoolVaultCreated(tokenAddress, vaultAddress);
     }
 
-    /**
-     * @dev Deploys a {StreamflowEscrowVault}, transfers `allocation` tokens to it, and persists
-     *      vault address, allocation amount, and intended hot vault in Diamond storage.
-     *      Reverts with {VaultCreationFailed} if the ERC20 transfer returns false.
-     *      Emits {StreamflowEscrowVaultCreated}.
-     * @param tokenAddress Artist ERC20 token address.
-     * @param allocation   Token amount to transfer to the vault, in base units.
-     * @param hotVault     Intended downstream destination, registered for multisig reference.
-     * @param s            Reference to the Diamond factory storage layout.
-     * @param multisig     Address assigned as the vault's sole release controller.
-     */
-    function _deployStreamflowEscrowVault(
-        address tokenAddress,
-        uint256 allocation,
-        address hotVault,
-        MostroFactoryLayout storage s,
-        address multisig
-    ) internal {
+    /// @dev Thin wrapper — deploys the vault contract then delegates to {_fundAndRegisterVault}.
+    function _deployStreamflowEscrowVault(address tokenAddress, uint256 allocation, address hotVault, MostroFactoryLayout storage s, address multisig) internal {
         address vaultAddress = address(new StreamflowEscrowVault(tokenAddress, multisig));
-        if (!IERC20(tokenAddress).transfer(vaultAddress, allocation)) revert VaultCreationFailed();
-
-        s.streamflowEscrowVaults[tokenAddress] = vaultAddress;
-        s.streamflowEscrowAllocations[tokenAddress] = allocation;
-        s.streamflowHotVaults[tokenAddress] = hotVault;
-
+        _fundAndRegisterVault(vaultAddress, tokenAddress, allocation, hotVault, s.streamflowEscrowVaults, s.streamflowEscrowAllocations, s.streamflowHotVaults);
         emit StreamflowEscrowVaultCreated(tokenAddress, vaultAddress);
     }
 
-    /**
-     * @dev Deploys a {LPVault}, transfers `allocation` tokens to it, and persists
-     *      vault address, allocation amount, and intended hot vault in Diamond storage.
-     *      Reverts with {VaultCreationFailed} if the ERC20 transfer returns false.
-     *      Emits {LPVaultCreated}.
-     * @param tokenAddress Artist ERC20 token address.
-     * @param allocation   Token amount to transfer to the vault, in base units.
-     * @param hotVault     Intended downstream destination, registered for multisig reference.
-     * @param s            Reference to the Diamond factory storage layout.
-     * @param multisig     Address assigned as the vault's sole release controller.
-     */
-    function _deployLPVault(
-        address tokenAddress,
-        uint256 allocation,
-        address hotVault,
-        MostroFactoryLayout storage s,
-        address multisig
-    ) internal {
+    /// @dev Thin wrapper — deploys the vault contract then delegates to {_fundAndRegisterVault}.
+    function _deployLPVault(address tokenAddress, uint256 allocation, address hotVault, MostroFactoryLayout storage s, address multisig) internal {
         address vaultAddress = address(new LPVault(tokenAddress, multisig));
-        if (!IERC20(tokenAddress).transfer(vaultAddress, allocation)) revert VaultCreationFailed();
-
-        s.lpVaults[tokenAddress] = vaultAddress;
-        s.lpAllocations[tokenAddress] = allocation;
-        s.lpHotVaults[tokenAddress] = hotVault;
-
+        _fundAndRegisterVault(vaultAddress, tokenAddress, allocation, hotVault, s.lpVaults, s.lpAllocations, s.lpHotVaults);
         emit LPVaultCreated(tokenAddress, vaultAddress);
     }
 
+    /// @dev Thin wrapper — deploys the vault contract then delegates to {_fundAndRegisterVault}.
+    ///      `allocation` is the arithmetic remainder, ensuring the Diamond holds zero tokens after this call.
+    function _deployGenesisVault(address tokenAddress, uint256 allocation, address hotVault, MostroFactoryLayout storage s, address multisig) internal {
+        address vaultAddress = address(new GenesisVault(tokenAddress, multisig));
+        _fundAndRegisterVault(vaultAddress, tokenAddress, allocation, hotVault, s.genesisVaults, s.genesisAllocations, s.genesisHotVaults);
+        emit GenesisVaultCreated(tokenAddress, vaultAddress);
+    }
+
     /**
-     * @dev Deploys a {GenesisVault}, transfers `allocation` tokens to it, and persists
-     *      vault address, allocation amount, and intended hot vault in Diamond storage.
-     *      `allocation` is the arithmetic remainder after the three prior vaults, ensuring
-     *      the Diamond holds zero tokens of `tokenAddress` after this call.
+     * @dev Shared logic for all cold vault deployments: transfers tokens and writes three
+     *      storage entries. Extracted to eliminate duplication across the four deploy wrappers.
      *      Reverts with {VaultCreationFailed} if the ERC20 transfer returns false.
-     *      Emits {GenesisVaultCreated}.
-     * @param tokenAddress Artist ERC20 token address.
-     * @param allocation   Token amount to transfer to the vault, in base units.
-     * @param hotVault     Intended downstream destination, registered for multisig reference.
-     * @param s            Reference to the Diamond factory storage layout.
-     * @param multisig     Address assigned as the vault's sole release controller.
+     * @param vaultAddress   Deployed cold vault address, recipient of the token transfer.
+     * @param tokenAddress   Artist ERC20 token address.
+     * @param allocation     Token amount to transfer, in base units.
+     * @param hotVault       Intended downstream destination, registered for multisig reference.
+     * @param vaultMap       Diamond storage mapping: token → vault address.
+     * @param allocationMap  Diamond storage mapping: token → allocated amount.
+     * @param hotVaultMap    Diamond storage mapping: token → intended hot vault.
      */
-    function _deployGenesisVault(
+    function _fundAndRegisterVault(
+        address vaultAddress,
         address tokenAddress,
         uint256 allocation,
         address hotVault,
-        MostroFactoryLayout storage s,
-        address multisig
+        mapping(address => address) storage vaultMap,
+        mapping(address => uint256) storage allocationMap,
+        mapping(address => address) storage hotVaultMap
     ) internal {
-        address vaultAddress = address(new GenesisVault(tokenAddress, multisig));
         if (!IERC20(tokenAddress).transfer(vaultAddress, allocation)) revert VaultCreationFailed();
-
-        s.genesisVaults[tokenAddress] = vaultAddress;
-        s.genesisAllocations[tokenAddress] = allocation;
-        s.genesisHotVaults[tokenAddress] = hotVault;
-
-        emit GenesisVaultCreated(tokenAddress, vaultAddress);
+        vaultMap[tokenAddress] = vaultAddress;
+        allocationMap[tokenAddress] = allocation;
+        hotVaultMap[tokenAddress] = hotVault;
     }
 }
