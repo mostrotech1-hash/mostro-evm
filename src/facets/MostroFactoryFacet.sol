@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import {IMostroFactory} from '../interfaces/IMostroFactory.sol';
 import {IMostroStructs} from '../interfaces/IMostroStructs.sol';
-import {MostroFactoryStorage, MostroRoleManagerStorage, ConfigStorage} from '../libraries/StorageLibraries.sol';
+import {MostroFactoryStorage, MostroRoleManagerStorage, ConfigStorage, ReentrancyStorage} from '../libraries/StorageLibraries.sol';
 import {PublicPoolVault} from '../vaults/PublicPoolVault.sol';
 import {StreamflowEscrowVault} from '../vaults/StreamflowEscrowVault.sol';
 import {LPVault} from '../vaults/LPVault.sol';
@@ -32,6 +32,9 @@ contract MostroFactoryFacet is IMostroStructs, IMostroFactory {
 
     // ─── Constants ────────────────────────────────────────
 
+    uint256 private constant NOT_ENTERED = 1;
+    uint256 private constant ENTERED     = 2;
+
     /// @notice Public pool vault allocation in basis points. Represents 45.00% of total supply.
     uint256 public constant PUBLIC_POOL_BPS       = 4500;
 
@@ -48,6 +51,19 @@ contract MostroFactoryFacet is IMostroStructs, IMostroFactory {
     uint256 public constant GENESIS_BPS           = 10000 - PUBLIC_POOL_BPS - STREAMFLOW_ESCROW_BPS - LP_BPS;
 
     // ─── Modifiers ────────────────────────────────────────
+
+    /**
+     * @dev Diamond-compatible reentrancy guard. Uses a dedicated keccak256 storage slot
+     *      to avoid collisions with other facets. Status is initialised to NOT_ENTERED (1)
+     *      on first read (default uint256 is 0, treated as NOT_ENTERED).
+     */
+    modifier nonReentrant() {
+        ReentrancyLayout storage r = ReentrancyStorage.layout();
+        if (r.status == ENTERED) revert ReentrantCall();
+        r.status = ENTERED;
+        _;
+        r.status = NOT_ENTERED;
+    }
 
     /**
      * @dev Reads role state from {MostroRoleManagerStorage}. Permits both `admins` and
@@ -91,7 +107,7 @@ contract MostroFactoryFacet is IMostroStructs, IMostroFactory {
         address streamflowHotVault,
         address lpHotVault,
         address genesisHotVault
-    ) external onlyAdminOrSuperAdmin {
+    ) external onlyAdminOrSuperAdmin nonReentrant {
         if (bytes(artistId).length == 0) revert InvalidArtistId();
         if (totalSupply == 0) revert InvalidTotalSupply();
         if (

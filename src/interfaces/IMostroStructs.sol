@@ -27,6 +27,11 @@ interface IMostroStructs {
         uint256 superAdminCount;
     }
 
+    // Storage struct for reentrancy guard
+    struct ReentrancyLayout {
+        uint256 status;
+    }
+
     // Storage struct for Mostro Factory
     struct MostroFactoryLayout {
         uint256 artistCount;

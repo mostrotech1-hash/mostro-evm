@@ -19,6 +19,7 @@ interface IMostroFactory {
     error InsufficientTokenBalance();
     error TotalSupplyMismatch();
     error InvalidTotalSupply();
+    error ReentrantCall();
     error Unauthorized();
 
     // ─── Factory Functions ─────────────────────────────────
