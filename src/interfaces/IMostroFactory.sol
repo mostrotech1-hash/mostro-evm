@@ -17,6 +17,7 @@ interface IMostroFactory {
     error ArtistAlreadyExists();
     error VaultCreationFailed();
     error InsufficientTokenBalance();
+    error TotalSupplyMismatch();
     error Unauthorized();
 
     // ─── Factory Functions ─────────────────────────────────

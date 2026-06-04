@@ -63,9 +63,10 @@ contract MostroFactoryFacet is IMostroStructs, IMostroFactory {
 
     /**
      * @notice Deploys and funds the four cold vaults for a previously minted artist token.
-     * @dev Callable once per `artistId`. Allocation order is fixed: public pool → streamflow
-     *      → LP → genesis. The genesis vault always receives the exact arithmetic remainder,
-     *      capturing any integer division dust to guarantee `sum(allocations) == totalSupply`.
+     * @dev Callable once per `artistId`. `totalSupply` is validated against the token's on-chain
+     *      `totalSupply()` to prevent misconfiguration. Allocation order is fixed: public pool →
+     *      streamflow → LP → genesis. The genesis vault always receives the exact arithmetic
+     *      remainder, capturing any integer division dust to guarantee `sum(allocations) == totalSupply`.
      *
      *      Emits {PublicPoolVaultCreated}, {StreamflowEscrowVaultCreated}, {LPVaultCreated},
      *      and {GenesisVaultCreated}.
@@ -106,6 +107,7 @@ contract MostroFactoryFacet is IMostroStructs, IMostroFactory {
         MostroFactoryLayout storage s = MostroFactoryStorage.layout();
         if (s.artistTokens[artistId] != address(0)) revert ArtistAlreadyExists();
 
+        if (IERC20(tokenAddress).totalSupply() != totalSupply) revert TotalSupplyMismatch();
         if (IERC20(tokenAddress).balanceOf(address(this)) < totalSupply) revert InsufficientTokenBalance();
 
         s.artistTokens[artistId] = tokenAddress;
