@@ -61,6 +61,9 @@ abstract contract BaseColdVault {
     /// @notice Thrown when the underlying ERC20 `transfer` call returns false.
     error TransferFailed();
 
+    /// @notice Thrown when a zero amount is passed to {release}.
+    error InvalidAmount();
+
     // ─── Modifier ─────────────────────────────────────────
 
     /// @dev Reverts with {OnlyReleaseController} if `msg.sender` is not the release controller.
@@ -108,6 +111,7 @@ abstract contract BaseColdVault {
      * @param amount      Amount to transfer, in base units of `artistToken`.
      */
     function release(address destination, uint256 amount) external onlyReleaseController {
+        if (amount == 0) revert InvalidAmount();
         if (!approvedDestinations[destination]) revert DestinationNotApproved();
         if (!IERC20(artistToken).transfer(destination, amount)) revert TransferFailed();
         emit TokensReleased(destination, amount);
