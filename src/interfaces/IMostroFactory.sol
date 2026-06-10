@@ -15,7 +15,6 @@ interface IMostroFactory {
     error MustBeANonZeroAddress();
     error InvalidArtistId();
     error ArtistAlreadyExists();
-    error VaultCreationFailed();
     error InsufficientTokenBalance();
     error TotalSupplyMismatch();
     error InvalidTotalSupply();

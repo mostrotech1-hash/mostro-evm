@@ -9,6 +9,7 @@ import {StreamflowEscrowVault} from '../vaults/StreamflowEscrowVault.sol';
 import {LPVault} from '../vaults/LPVault.sol';
 import {GenesisVault} from '../vaults/GenesisVault.sol';
 import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import {SafeERC20} from '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 
 /**
  * @title MostroFactoryFacet
@@ -29,6 +30,8 @@ import {IERC20} from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
  *        - Intended hot vault destinations are registered in Diamond storage for multisig reference.
  */
 contract MostroFactoryFacet is IMostroStructs, IMostroFactory {
+
+    using SafeERC20 for IERC20;
 
     // ─── Constants ────────────────────────────────────────
 
@@ -240,6 +243,6 @@ contract MostroFactoryFacet is IMostroStructs, IMostroFactory {
         vaultMap[tokenAddress] = vaultAddress;
         allocationMap[tokenAddress] = allocation;
         hotVaultMap[tokenAddress] = hotVault;
-        if (!IERC20(tokenAddress).transfer(vaultAddress, allocation)) revert VaultCreationFailed();
+        IERC20(tokenAddress).safeTransfer(vaultAddress, allocation);
     }
 }
