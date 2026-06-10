@@ -237,9 +237,9 @@ contract MostroFactoryFacet is IMostroStructs, IMostroFactory {
         mapping(address => uint256) storage allocationMap,
         mapping(address => address) storage hotVaultMap
     ) internal {
-        if (!IERC20(tokenAddress).transfer(vaultAddress, allocation)) revert VaultCreationFailed();
         vaultMap[tokenAddress] = vaultAddress;
         allocationMap[tokenAddress] = allocation;
         hotVaultMap[tokenAddress] = hotVault;
+        if (!IERC20(tokenAddress).transfer(vaultAddress, allocation)) revert VaultCreationFailed();
     }
 }
