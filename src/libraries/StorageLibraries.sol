@@ -68,6 +68,20 @@ library MostroRoleManagerStorage {
     }
 }
 
+library ReentrancyStorage {
+    bytes32 internal constant STORAGE_SLOT =
+    keccak256("mostro.storage.reentrancy");
+
+    function layout()
+    internal
+    view
+    returns (IMostroStructs.ReentrancyLayout storage l)
+    {
+        bytes32 slot = STORAGE_SLOT;
+        assembly {l.slot := slot}
+    }
+}
+
 library MostroFactoryStorage {
     bytes32 internal constant STORAGE_SLOT =
     keccak256("mostro.storage.mostro.factory");

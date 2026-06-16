@@ -1,30 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {BaseColdVault} from "./BaseColdVault.sol";
 
-contract PublicPoolVault {
-
-    // ─── State Variables ──────────────────────────────────
-
-    address public immutable artistToken;
-    address public immutable diamond;
-
-    // ─── Errors ───────────────────────────────────────────
-
-    error MustBeANonZeroAddress();
-
-    // ─── Constructor ──────────────────────────────────────
-
-    constructor(address _artistToken, address _diamond) {
-        if (_artistToken == address(0) || _diamond == address(0)) revert MustBeANonZeroAddress();
-        artistToken = _artistToken;
-        diamond = _diamond;
-    }
-
-    // ─── View Functions ───────────────────────────────────
-
-    function balance() external view returns (uint256) {
-        return IERC20(artistToken).balanceOf(address(this));
-    }
+/**
+ * @title PublicPoolVault
+ * @notice Cold vault holding 45% of an artist token's supply, designated for public trading.
+ * @dev Tokens remain locked until the multisig calls {BaseColdVault-approveDestination}
+ *      on the target `UnlockedSaleVault`, then {BaseColdVault-release} to fund it.
+ *      The `UnlockedSaleVault` subsequently grants the bonding curve a max approval
+ *      to execute buy and sell orders against this allocation.
+ */
+contract PublicPoolVault is BaseColdVault {
+    constructor(address _artistToken, address _releaseController)
+        BaseColdVault(_artistToken, _releaseController) {}
 }

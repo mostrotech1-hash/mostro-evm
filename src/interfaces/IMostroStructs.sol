@@ -27,12 +27,26 @@ interface IMostroStructs {
         uint256 superAdminCount;
     }
 
+    // Storage struct for reentrancy guard
+    struct ReentrancyLayout {
+        uint256 status;
+    }
+
     // Storage struct for Mostro Factory
     struct MostroFactoryLayout {
         uint256 artistCount;
-        mapping(string => address) artistTokens;             // artist name => token address
+        mapping(bytes32 => address) artistTokens;            // keccak256(artistId) => token address
         mapping(address => address) publicPoolVaults;        // artist token => publicPoolVault address
         mapping(address => address) streamflowEscrowVaults;  // artist token => streamflowEscrowVault address
         mapping(address => address) lpVaults;                // artist token => LPVault address
+        mapping(address => address) genesisVaults;           // artist token => GenesisVault address
+        mapping(address => uint256) publicPoolAllocations;   // artist token => allocated amount
+        mapping(address => uint256) streamflowEscrowAllocations;
+        mapping(address => uint256) lpAllocations;
+        mapping(address => uint256) genesisAllocations;
+        mapping(address => address) publicPoolHotVaults;     // artist token => approved hot vault
+        mapping(address => address) streamflowHotVaults;
+        mapping(address => address) lpHotVaults;
+        mapping(address => address) genesisHotVaults;
     }
 }
