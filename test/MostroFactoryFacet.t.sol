@@ -134,88 +134,6 @@ contract MostroFactoryFacetTest is Test {
         return (address(0x1), address(0x2), address(0x3), address(0x4));
     }
 
-    // ─── happy path ──────────────────────────────────────────────────────────
-
-    function test_initializeColdVaults_deploysAllFourVaults() external {
-        (address pp, address sf, address lp, address gen) = _defaultHotVaults();
-        vm.prank(admin);
-        factory.initializeColdVaults(ARTIST_ID, address(token), SUPPLY, pp, sf, lp, gen);
-
-        assertTrue(factory.getPublicPoolVault(address(token))        != address(0));
-        assertTrue(factory.getStreamflowEscrowVault(address(token))  != address(0));
-        assertTrue(factory.getLPVault(address(token))                != address(0));
-        assertTrue(factory.getGenesisVault(address(token))           != address(0));
-    }
-
-    function test_initializeColdVaults_registersArtistToken() external {
-        (address pp, address sf, address lp, address gen) = _defaultHotVaults();
-        vm.prank(admin);
-        factory.initializeColdVaults(ARTIST_ID, address(token), SUPPLY, pp, sf, lp, gen);
-        assertEq(factory.getArtistToken(ARTIST_ID), address(token));
-    }
-
-    function test_initializeColdVaults_diamondHoldsZeroAfter() external {
-        (address pp, address sf, address lp, address gen) = _defaultHotVaults();
-        vm.prank(admin);
-        factory.initializeColdVaults(ARTIST_ID, address(token), SUPPLY, pp, sf, lp, gen);
-        assertEq(token.balanceOf(address(diamond)), 0);
-    }
-
-    function test_initializeColdVaults_totalAllocationsEqualSupply() external {
-        (address pp, address sf, address lp, address gen) = _defaultHotVaults();
-        vm.prank(admin);
-        factory.initializeColdVaults(ARTIST_ID, address(token), SUPPLY, pp, sf, lp, gen);
-
-        uint256 bal_pp  = token.balanceOf(factory.getPublicPoolVault(address(token)));
-        uint256 bal_sf  = token.balanceOf(factory.getStreamflowEscrowVault(address(token)));
-        uint256 bal_lp  = token.balanceOf(factory.getLPVault(address(token)));
-        uint256 bal_gen = token.balanceOf(factory.getGenesisVault(address(token)));
-
-        assertEq(bal_pp + bal_sf + bal_lp + bal_gen, SUPPLY);
-    }
-
-    function test_initializeColdVaults_allocationsMatchBps() external {
-        (address pp, address sf, address lp, address gen) = _defaultHotVaults();
-        vm.prank(admin);
-        factory.initializeColdVaults(ARTIST_ID, address(token), SUPPLY, pp, sf, lp, gen);
-
-        assertEq(token.balanceOf(factory.getPublicPoolVault(address(token))),       (SUPPLY * 4500) / 10000);
-        assertEq(token.balanceOf(factory.getStreamflowEscrowVault(address(token))), (SUPPLY * 4700) / 10000);
-        assertEq(token.balanceOf(factory.getLPVault(address(token))),               (SUPPLY * 500)  / 10000);
-    }
-
-    function test_initializeColdVaults_genesisAbsorbsRoundingDust() external {
-        // Use an odd supply so integer division produces dust.
-        MockArtistToken oddToken = new MockArtistToken();
-        uint256 oddSupply = 1_000_003e18;
-        oddToken.mint(address(diamond), oddSupply);
-
-        (address pp, address sf, address lp, address gen) = _defaultHotVaults();
-        vm.prank(admin);
-        factory.initializeColdVaults(keccak256("odd-artist"), address(oddToken), oddSupply, pp, sf, lp, gen);
-
-        uint256 ppAlloc  = (oddSupply * 4500) / 10000;
-        uint256 sfAlloc  = (oddSupply * 4700) / 10000;
-        uint256 lpAlloc  = (oddSupply * 500)  / 10000;
-        uint256 expected = oddSupply - ppAlloc - sfAlloc - lpAlloc;
-
-        assertEq(oddToken.balanceOf(factory.getGenesisVault(address(oddToken))), expected);
-    }
-
-    function test_initializeColdVaults_emitsFourEvents() external {
-        (address pp, address sf, address lp, address gen) = _defaultHotVaults();
-        vm.prank(admin);
-        vm.expectEmit(true, false, false, false);
-        emit PublicPoolVaultCreated(address(token), address(0));
-        vm.expectEmit(true, false, false, false);
-        emit StreamflowEscrowVaultCreated(address(token), address(0));
-        vm.expectEmit(true, false, false, false);
-        emit LPVaultCreated(address(token), address(0));
-        vm.expectEmit(true, false, false, false);
-        emit GenesisVaultCreated(address(token), address(0));
-        factory.initializeColdVaults(ARTIST_ID, address(token), SUPPLY, pp, sf, lp, gen);
-    }
-
     // ─── access control ───────────────────────────────────────────────────────
 
     function test_initializeColdVaults_revertsForUnknownCaller() external {
@@ -229,14 +147,12 @@ contract MostroFactoryFacetTest is Test {
         (address pp, address sf, address lp, address gen) = _defaultHotVaults();
         vm.prank(admin);
         factory.initializeColdVaults(ARTIST_ID, address(token), SUPPLY, pp, sf, lp, gen);
-        assertEq(factory.getArtistToken(ARTIST_ID), address(token));
     }
 
     function test_initializeColdVaults_superAdminCanCall() external {
         (address pp, address sf, address lp, address gen) = _defaultHotVaults();
         vm.prank(superAdm);
         factory.initializeColdVaults(ARTIST_ID, address(token), SUPPLY, pp, sf, lp, gen);
-        assertEq(factory.getArtistToken(ARTIST_ID), address(token));
     }
 
     // ─── input validation ─────────────────────────────────────────────────────
@@ -248,18 +164,18 @@ contract MostroFactoryFacetTest is Test {
         factory.initializeColdVaults(bytes32(0), address(token), SUPPLY, pp, sf, lp, gen);
     }
 
-    function test_initializeColdVaults_revertsOnZeroTotalSupply() external {
-        (address pp, address sf, address lp, address gen) = _defaultHotVaults();
-        vm.prank(admin);
-        vm.expectRevert(IMostroFactory.InvalidTotalSupply.selector);
-        factory.initializeColdVaults(ARTIST_ID, address(token), 0, pp, sf, lp, gen);
-    }
-
     function test_initializeColdVaults_revertsOnZeroTokenAddress() external {
         (address pp, address sf, address lp, address gen) = _defaultHotVaults();
         vm.prank(admin);
         vm.expectRevert(IMostroFactory.MustBeANonZeroAddress.selector);
         factory.initializeColdVaults(ARTIST_ID, address(0), SUPPLY, pp, sf, lp, gen);
+    }
+
+    function test_initializeColdVaults_revertsOnZeroTotalSupply() external {
+        (address pp, address sf, address lp, address gen) = _defaultHotVaults();
+        vm.prank(admin);
+        vm.expectRevert(IMostroFactory.InvalidTotalSupply.selector);
+        factory.initializeColdVaults(ARTIST_ID, address(token), 0, pp, sf, lp, gen);
     }
 
     function test_initializeColdVaults_revertsOnZeroPublicPoolHotVault() external {
@@ -365,6 +281,88 @@ contract MostroFactoryFacetTest is Test {
         IMostroFactory(address(freshDiamond)).initializeColdVaults(
             ARTIST_ID, address(freshToken), SUPPLY, pp, sf, lp, gen
         );
+    }
+
+    // ─── happy path ──────────────────────────────────────────────────────────
+
+    function test_initializeColdVaults_deploysAllFourVaults() external {
+        (address pp, address sf, address lp, address gen) = _defaultHotVaults();
+        vm.prank(admin);
+        factory.initializeColdVaults(ARTIST_ID, address(token), SUPPLY, pp, sf, lp, gen);
+
+        assertTrue(factory.getPublicPoolVault(address(token))        != address(0));
+        assertTrue(factory.getStreamflowEscrowVault(address(token))  != address(0));
+        assertTrue(factory.getLPVault(address(token))                != address(0));
+        assertTrue(factory.getGenesisVault(address(token))           != address(0));
+    }
+
+    function test_initializeColdVaults_registersArtistToken() external {
+        (address pp, address sf, address lp, address gen) = _defaultHotVaults();
+        vm.prank(admin);
+        factory.initializeColdVaults(ARTIST_ID, address(token), SUPPLY, pp, sf, lp, gen);
+        assertEq(factory.getArtistToken(ARTIST_ID), address(token));
+    }
+
+    function test_initializeColdVaults_diamondHoldsZeroAfter() external {
+        (address pp, address sf, address lp, address gen) = _defaultHotVaults();
+        vm.prank(admin);
+        factory.initializeColdVaults(ARTIST_ID, address(token), SUPPLY, pp, sf, lp, gen);
+        assertEq(token.balanceOf(address(diamond)), 0);
+    }
+
+    function test_initializeColdVaults_totalAllocationsEqualSupply() external {
+        (address pp, address sf, address lp, address gen) = _defaultHotVaults();
+        vm.prank(admin);
+        factory.initializeColdVaults(ARTIST_ID, address(token), SUPPLY, pp, sf, lp, gen);
+
+        uint256 bal_pp  = token.balanceOf(factory.getPublicPoolVault(address(token)));
+        uint256 bal_sf  = token.balanceOf(factory.getStreamflowEscrowVault(address(token)));
+        uint256 bal_lp  = token.balanceOf(factory.getLPVault(address(token)));
+        uint256 bal_gen = token.balanceOf(factory.getGenesisVault(address(token)));
+
+        assertEq(bal_pp + bal_sf + bal_lp + bal_gen, SUPPLY);
+    }
+
+    function test_initializeColdVaults_allocationsMatchBps() external {
+        (address pp, address sf, address lp, address gen) = _defaultHotVaults();
+        vm.prank(admin);
+        factory.initializeColdVaults(ARTIST_ID, address(token), SUPPLY, pp, sf, lp, gen);
+
+        assertEq(token.balanceOf(factory.getPublicPoolVault(address(token))),       (SUPPLY * 4500) / 10000);
+        assertEq(token.balanceOf(factory.getStreamflowEscrowVault(address(token))), (SUPPLY * 4700) / 10000);
+        assertEq(token.balanceOf(factory.getLPVault(address(token))),               (SUPPLY * 500)  / 10000);
+    }
+
+    function test_initializeColdVaults_genesisAbsorbsRoundingDust() external {
+        // Use an odd supply so integer division produces dust.
+        MockArtistToken oddToken = new MockArtistToken();
+        uint256 oddSupply = 1_000_003e18;
+        oddToken.mint(address(diamond), oddSupply);
+
+        (address pp, address sf, address lp, address gen) = _defaultHotVaults();
+        vm.prank(admin);
+        factory.initializeColdVaults(keccak256("odd-artist"), address(oddToken), oddSupply, pp, sf, lp, gen);
+
+        uint256 ppAlloc  = (oddSupply * 4500) / 10000;
+        uint256 sfAlloc  = (oddSupply * 4700) / 10000;
+        uint256 lpAlloc  = (oddSupply * 500)  / 10000;
+        uint256 expected = oddSupply - ppAlloc - sfAlloc - lpAlloc;
+
+        assertEq(oddToken.balanceOf(factory.getGenesisVault(address(oddToken))), expected);
+    }
+
+    function test_initializeColdVaults_emitsFourEvents() external {
+        (address pp, address sf, address lp, address gen) = _defaultHotVaults();
+        vm.prank(admin);
+        vm.expectEmit(true, false, false, false);
+        emit PublicPoolVaultCreated(address(token), address(0));
+        vm.expectEmit(true, false, false, false);
+        emit StreamflowEscrowVaultCreated(address(token), address(0));
+        vm.expectEmit(true, false, false, false);
+        emit LPVaultCreated(address(token), address(0));
+        vm.expectEmit(true, false, false, false);
+        emit GenesisVaultCreated(address(token), address(0));
+        factory.initializeColdVaults(ARTIST_ID, address(token), SUPPLY, pp, sf, lp, gen);
     }
 
     // ─── view functions ───────────────────────────────────────────────────────
