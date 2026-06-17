@@ -8,7 +8,7 @@ import {UnlockedSaleVault} from "./vaults/UnlockedSaleVault.sol";
 /**
  * @title MostroBondingCurve
  * @notice Linear bonding curve for purchasing artist tokens from the UnlockedSaleVault.
- *         Price increases with each token sold. USDC proceeds are forwarded to the Diamond.
+ *         Price increases with each token sold. USDC proceeds are stored in the UnlockedSaleVault.
  */
 contract MostroBondingCurve {
 
@@ -56,10 +56,10 @@ contract MostroBondingCurve {
     // ==================== Constructor =====================
 
     /**
-     * @param _diamond          Diamond proxy — receives USDC proceeds and controls pause.
-     * @param _artistToken      ERC20 artist token sold through this curve.
-     * @param _usdc             USDC token used as payment currency.
-     * @param _saleVault        UnlockedSaleVault holding the tokens available for sale.
+     * @param _diamond      Diamond proxy — controls pause.
+     * @param _artistToken  ERC20 artist token sold through this curve.
+     * @param _usdc         USDC token used as payment currency.
+     * @param _saleVault    UnlockedSaleVault holding the tokens available for sale.
      */
     constructor(address _diamond, address _artistToken, address _usdc, address _saleVault) {
         if (_diamond == address(0) || _artistToken == address(0) ||
@@ -97,7 +97,7 @@ contract MostroBondingCurve {
     /**
      * @notice Purchase `amount` artist tokens by paying USDC.
      * @dev    Tokens are transferred from UnlockedSaleVault (which has pre-approved this contract).
-     *         USDC proceeds are forwarded to the Diamond.
+     *         USDC proceeds are stored in the UnlockedSaleVault.
      * @param amount  Number of artist tokens to purchase.
      * @param maxCost Maximum USDC the caller is willing to pay (slippage protection).
      */
